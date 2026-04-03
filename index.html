@@ -1,0 +1,1978 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HCE Pediátrica — Consultorio Particular</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+/* ===== RESET & BASE ===== */
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#f0f4f8;color:#1a202c;font-size:14px}
+input,textarea,select,button{font-family:inherit;font-size:14px}
+
+/* ===== LAYOUT ===== */
+#app{display:flex;height:100vh;overflow:hidden}
+#sidebar{width:220px;background:#1a56a0;color:#fff;display:flex;flex-direction:column;flex-shrink:0}
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+#topbar{background:#fff;border-bottom:2px solid #1a56a0;padding:12px 20px;display:flex;align-items:center;gap:12px}
+#topbar h1{font-size:16px;color:#1a56a0;font-weight:700}
+#topbar span{font-size:12px;color:#718096;margin-left:auto}
+#content{flex:1;overflow-y:auto;padding:20px}
+
+/* ===== SIDEBAR ===== */
+.sidebar-logo{padding:20px 16px 10px;border-bottom:1px solid rgba(255,255,255,0.15);text-align:center}
+.sidebar-logo .logo-icon{font-size:32px;margin-bottom:4px}
+.sidebar-logo p{font-size:11px;opacity:0.75;line-height:1.4}
+.nav-section{padding:12px 0}
+.nav-section-title{font-size:10px;text-transform:uppercase;letter-spacing:1px;opacity:0.6;padding:4px 16px 6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;transition:background 0.15s;font-size:13px;border:none;background:none;color:#fff;width:100%;text-align:left}
+.nav-item:hover{background:rgba(255,255,255,0.1)}
+.nav-item.active{background:rgba(255,255,255,0.2);border-left:3px solid #63b3ed}
+.nav-item .icon{font-size:16px;width:20px;text-align:center}
+.sidebar-footer{margin-top:auto;padding:12px 16px;font-size:11px;opacity:0.6;border-top:1px solid rgba(255,255,255,0.15)}
+
+/* ===== CARDS & SECTIONS ===== */
+.card{background:#fff;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,0.08);padding:20px;margin-bottom:16px}
+.card-title{font-size:15px;font-weight:700;color:#1a56a0;margin-bottom:14px;display:flex;align-items:center;gap:8px;border-bottom:2px solid #ebf4ff;padding-bottom:8px}
+.section-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.section-grid.cols-2{grid-template-columns:1fr 1fr}
+.section-grid.cols-3{grid-template-columns:1fr 1fr 1fr}
+.section-grid.cols-4{grid-template-columns:1fr 1fr 1fr 1fr}
+
+/* ===== FORM ELEMENTS ===== */
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:12px;font-weight:600;color:#4a5568;text-transform:uppercase;letter-spacing:0.5px}
+.field input,.field textarea,.field select{border:1px solid #cbd5e0;border-radius:6px;padding:8px 10px;color:#2d3748;transition:border-color 0.15s;background:#fff}
+.field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:#1a56a0;box-shadow:0 0 0 3px rgba(26,86,160,0.1)}
+.field textarea{resize:vertical;min-height:80px}
+.field .hint{font-size:11px;color:#718096;margin-top:2px}
+.field-full{grid-column:1/-1}
+.required::after{content:' *';color:#e53e3e}
+
+/* ===== VITAL SIGNS ===== */
+.vitals-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.vital-box{background:#f7fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;text-align:center}
+.vital-box label{font-size:11px;font-weight:700;color:#4a5568;text-transform:uppercase;display:block;margin-bottom:6px}
+.vital-box input{border:none;background:none;font-size:18px;font-weight:700;color:#1a56a0;width:100%;text-align:center;padding:0}
+.vital-box input:focus{outline:none}
+.vital-box .unit{font-size:11px;color:#718096;margin-top:2px}
+.vital-range{font-size:10px;color:#718096;margin-top:4px;padding:3px 6px;background:#edf2f7;border-radius:4px}
+.vital-range.ok{color:#276749;background:#f0fff4}
+.vital-range.alert{color:#c05621;background:#fffaf0}
+.vital-range.danger{color:#9b2c2c;background:#fff5f5}
+
+/* ===== BUTTONS ===== */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:7px;border:none;cursor:pointer;font-weight:600;font-size:13px;transition:all 0.15s}
+.btn-primary{background:#1a56a0;color:#fff}
+.btn-primary:hover{background:#1546830}
+.btn-success{background:#276749;color:#fff}
+.btn-success:hover{background:#22543d}
+.btn-danger{background:#c53030;color:#fff}
+.btn-danger:hover{background:#9b2c2c}
+.btn-ghost{background:#edf2f7;color:#4a5568}
+.btn-ghost:hover{background:#e2e8f0}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-outline{background:transparent;border:1.5px solid #1a56a0;color:#1a56a0}
+.btn-outline:hover{background:#ebf4ff}
+.btn-group{display:flex;gap:8px;flex-wrap:wrap}
+
+/* ===== PATIENT LIST ===== */
+.search-bar{position:relative;margin-bottom:16px}
+.search-bar input{width:100%;padding:10px 12px 10px 36px;border:1px solid #cbd5e0;border-radius:8px;font-size:14px;background:#fff}
+.search-bar input:focus{outline:none;border-color:#1a56a0}
+.search-bar .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#718096;font-size:15px}
+.patient-list{display:flex;flex-direction:column;gap:8px}
+.patient-card{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:14px 16px;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:space-between}
+.patient-card:hover{border-color:#1a56a0;box-shadow:0 2px 8px rgba(26,86,160,0.1)}
+.patient-card .patient-name{font-weight:700;color:#2d3748;font-size:14px}
+.patient-card .patient-info{font-size:12px;color:#718096;margin-top:2px}
+.patient-card .patient-meta{text-align:right;font-size:12px;color:#718096}
+.patient-card .patient-hc{font-weight:700;color:#1a56a0;font-size:13px}
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:700}
+.badge-blue{background:#ebf4ff;color:#1a56a0}
+.badge-green{background:#f0fff4;color:#276749}
+.badge-orange{background:#fffaf0;color:#c05621}
+.badge-red{background:#fff5f5;color:#9b2c2c}
+
+/* ===== CIE-10 DROPDOWN ===== */
+.cie-wrapper{position:relative}
+.cie-results{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #cbd5e0;border-top:none;border-radius:0 0 8px 8px;max-height:220px;overflow-y:auto;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,0.1)}
+.cie-item{padding:8px 12px;cursor:pointer;border-bottom:1px solid #f7fafc;transition:background 0.1s}
+.cie-item:hover{background:#ebf4ff}
+.cie-item .code{font-weight:700;color:#1a56a0;font-size:12px;display:inline-block;width:55px}
+.cie-item .desc{color:#2d3748;font-size:13px}
+.cie-selected{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.cie-tag{background:#ebf4ff;color:#1a56a0;border-radius:5px;padding:3px 10px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px}
+.cie-tag button{background:none;border:none;cursor:pointer;color:#1a56a0;font-size:14px;padding:0;line-height:1}
+
+/* ===== TREATMENT ===== */
+.treatment-rows{display:flex;flex-direction:column;gap:8px;margin-bottom:8px}
+.treatment-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 36px;gap:8px;align-items:end}
+.treatment-row input{border:1px solid #cbd5e0;border-radius:6px;padding:7px 9px}
+.treatment-row .del-btn{background:#fff5f5;border:1px solid #feb2b2;color:#c53030;border-radius:6px;cursor:pointer;font-size:16px;height:34px;width:34px;display:flex;align-items:center;justify-content:center}
+.treatment-row .del-btn:hover{background:#fed7d7}
+
+/* ===== VACCINES ===== */
+.vaccine-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px}
+.vaccine-item{display:flex;align-items:flex-start;gap:10px;padding:10px;background:#f7fafc;border-radius:7px;border:1px solid #e2e8f0}
+.vaccine-item.pending{border-color:#fbd38d;background:#fffff0}
+.vaccine-item.overdue{border-color:#fc8181;background:#fff5f5}
+.vaccine-item.done{border-color:#9ae6b4;background:#f0fff4;opacity:0.7}
+.vaccine-item input[type=checkbox]{margin-top:2px;accent-color:#1a56a0;transform:scale(1.2)}
+.vaccine-item .vac-info .vac-name{font-weight:700;font-size:13px;color:#2d3748}
+.vaccine-item .vac-info .vac-age{font-size:11px;color:#718096;margin-top:2px}
+.vaccine-item .vac-badge{margin-left:auto;font-size:10px;padding:2px 7px;border-radius:99px;font-weight:700;white-space:nowrap}
+
+/* ===== GROWTH STATUS ===== */
+.growth-card{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.growth-indicator{border-radius:8px;padding:14px;text-align:center}
+.growth-indicator .gi-label{font-size:11px;font-weight:700;text-transform:uppercase;color:#4a5568;margin-bottom:4px}
+.growth-indicator .gi-value{font-size:20px;font-weight:800;margin-bottom:4px}
+.growth-indicator .gi-status{font-size:12px;font-weight:700;padding:3px 10px;border-radius:99px}
+.gi-normal{background:#f0fff4}.gi-low{background:#fff5f5}.gi-high{background:#fffaf0}.gi-unknown{background:#f7fafc}
+
+/* ===== COLLAPSIBLE ===== */
+.collapsible-header{display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:10px 0;border-bottom:1px solid #e2e8f0;margin-bottom:0;user-select:none}
+.collapsible-header:hover{color:#1a56a0}
+.collapsible-content{overflow:hidden;transition:max-height 0.3s ease}
+.collapsible-content.closed{max-height:0}
+.collapsible-content.open{max-height:2000px}
+.chevron{transition:transform 0.3s;font-size:12px}
+.chevron.open{transform:rotate(180deg)}
+
+/* ===== HISTORY ===== */
+.consult-timeline{display:flex;flex-direction:column;gap:0}
+.consult-entry{display:flex;gap:16px;padding-bottom:16px}
+.consult-entry:last-child{padding-bottom:0}
+.timeline-line{display:flex;flex-direction:column;align-items:center;gap:0}
+.timeline-dot{width:12px;height:12px;background:#1a56a0;border-radius:50%;flex-shrink:0;margin-top:4px}
+.timeline-vline{flex:1;width:2px;background:#e2e8f0;margin-top:2px}
+.consult-entry:last-child .timeline-vline{display:none}
+.consult-body{flex:1;background:#f7fafc;border-radius:8px;padding:14px;border:1px solid #e2e8f0}
+.consult-date{font-size:12px;color:#718096;margin-bottom:6px;font-weight:600}
+.consult-diag{font-weight:700;color:#1a56a0;font-size:14px;margin-bottom:4px}
+.consult-summary{font-size:13px;color:#4a5568;line-height:1.5}
+.consult-actions{margin-top:8px;display:flex;gap:6px}
+
+/* ===== EMPTY STATE ===== */
+.empty-state{text-align:center;padding:60px 20px;color:#a0aec0}
+.empty-state .empty-icon{font-size:48px;margin-bottom:12px}
+.empty-state p{font-size:15px}
+.empty-state .hint{font-size:13px;margin-top:6px}
+
+/* ===== TABS ===== */
+.tab-row{display:flex;gap:0;border-bottom:2px solid #e2e8f0;margin-bottom:20px}
+.tab-btn{padding:10px 18px;border:none;background:none;cursor:pointer;font-weight:600;font-size:13px;color:#718096;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.15s}
+.tab-btn.active{color:#1a56a0;border-bottom-color:#1a56a0}
+.tab-btn:hover:not(.active){color:#2d3748}
+
+/* ===== ALERTS ===== */
+.alert{padding:10px 14px;border-radius:7px;font-size:13px;margin-bottom:12px;display:flex;align-items:flex-start;gap:8px}
+.alert-info{background:#ebf4ff;color:#1a56a0;border:1px solid #bee3f8}
+.alert-success{background:#f0fff4;color:#276749;border:1px solid #9ae6b4}
+.alert-warning{background:#fffff0;color:#744210;border:1px solid #fbd38d}
+
+/* ===== MODAL ===== */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{background:#fff;border-radius:12px;max-width:600px;width:100%;max-height:90vh;overflow-y:auto;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,0.3)}
+.modal-title{font-size:18px;font-weight:700;color:#1a56a0;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid #ebf4ff}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid #e2e8f0}
+
+/* ===== PRINT STYLES ===== */
+@media print{
+  #sidebar,#topbar,.btn-group,.no-print,.tab-row{display:none!important}
+  #app{display:block;height:auto}
+  #main{overflow:visible}
+  #content{padding:0;overflow:visible}
+  body{background:#fff;font-size:12px;color:#000}
+  .card{box-shadow:none;border:1px solid #ccc;break-inside:avoid;margin-bottom:8px}
+  .card-title{color:#000;border-color:#ccc}
+  .vital-box{border:1px solid #ccc;background:#fff}
+  input,textarea,select{border:none!important;background:transparent!important;padding:0!important}
+  .print-header{display:block!important}
+  .growth-indicator{border:1px solid #ccc!important;background:#fff!important}
+  .vaccine-item{border:1px solid #ccc!important;background:#fff!important}
+}
+.print-header{display:none}
+
+/* ===== MISC ===== */
+.divider{height:1px;background:#e2e8f0;margin:16px 0}
+.text-sm{font-size:12px;color:#718096}
+.text-center{text-align:center}
+.mt-8{margin-top:8px}
+.mt-12{margin-top:12px}
+hr{border:none;border-top:1px solid #e2e8f0;margin:16px 0}
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- SIDEBAR -->
+  <nav id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🏥</div>
+      <strong>HCE Pediátrica</strong>
+      <p>Sistema de Historia Clínica<br>Electrónica — Consultorio Particular</p>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">Principal</div>
+      <button class="nav-item active" onclick="showView('patients')" id="nav-patients">
+        <span class="icon">👥</span> Pacientes
+      </button>
+      <button class="nav-item" onclick="showView('new-consult')" id="nav-new-consult">
+        <span class="icon">📋</span> Nueva Consulta
+      </button>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">Herramientas</div>
+      <button class="nav-item" onclick="showView('history')" id="nav-history">
+        <span class="icon">📂</span> Historial
+      </button>
+      <button class="nav-item" onclick="showView('search')" id="nav-search">
+        <span class="icon">🔍</span> Buscar Consultas
+      </button>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-title">Configuración</div>
+      <button class="nav-item" onclick="openSettings()">
+        <span class="icon">☁️</span> Google Sheets
+      </button>
+    </div>
+    <div class="sidebar-footer">
+      <div id="patient-count-sidebar">0 pacientes registrados</div>
+      <div id="sync-status" style="margin-top:4px;font-size:10px;opacity:0.8"></div>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <div id="main">
+    <div id="topbar">
+      <span>🏥</span>
+      <h1>Historia Clínica Electrónica Pediátrica</h1>
+      <span id="current-date-display"></span>
+    </div>
+    <div id="content">
+      <!-- Views injected here -->
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div id="settings-overlay" class="modal-overlay" style="display:none" onclick="if(event.target===this)closeSettings()">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-title">☁️ Sincronización con Google Sheets</div>
+    <div style="margin-bottom:16px">
+      <div class="alert alert-info" style="margin-bottom:12px">
+        <div>Conecta tu HCE con una hoja de Google para guardar y acceder a tus pacientes desde cualquier dispositivo.</div>
+      </div>
+      <div class="field" style="margin-bottom:12px">
+        <label>URL del Web App (Google Apps Script)</label>
+        <input type="url" id="gs-url" placeholder="https://script.google.com/macros/s/.../exec" style="border:1px solid #cbd5e0;border-radius:6px;padding:8px 10px;width:100%">
+        <div class="hint" style="font-size:11px;color:#718096;margin-top:4px">Pega aquí la URL de despliegue de tu Apps Script</div>
+      </div>
+      <div class="field" style="margin-bottom:16px">
+        <label>Nombre del médico (aparece en impresión)</label>
+        <input type="text" id="gs-doctor" placeholder="Dr./Dra. Apellidos" style="border:1px solid #cbd5e0;border-radius:6px;padding:8px 10px;width:100%" value="${localStorage.getItem('hce-doctor')||''}">
+      </div>
+      <div style="background:#f7fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px;font-size:12px;color:#4a5568">
+        <strong>Cómo configurar (5 min):</strong>
+        <ol style="margin:8px 0 0 16px;line-height:1.8">
+          <li>Ve a <strong>script.google.com</strong> → Nuevo proyecto</li>
+          <li>Pega el código Apps Script (botón de abajo)</li>
+          <li>Crea una Google Sheet → Copia el ID de la URL</li>
+          <li>Pega el ID en el código (línea: SHEET_ID)</li>
+          <li>Desplegar → Web App → Ejecutar como: Tú → Acceso: Cualquiera</li>
+          <li>Copia la URL de despliegue y pégala arriba</li>
+        </ol>
+      </div>
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-outline btn-sm" onclick="copyAppsScript()">📋 Copiar código Apps Script</button>
+        <button class="btn btn-outline btn-sm" onclick="testConnection()">🔌 Probar conexión</button>
+        <button class="btn btn-success btn-sm" onclick="importFromSheets()">⬇️ Importar desde Drive</button>
+      </div>
+      <div id="settings-msg" style="margin-top:10px;font-size:12px"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeSettings()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveSettings()">Guardar configuración</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div id="modal-overlay" class="modal-overlay" style="display:none" onclick="closeModal(event)">
+  <div class="modal" id="modal-box">
+    <div class="modal-title" id="modal-title">Detalle</div>
+    <div id="modal-body"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModalForce()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===========================
+// DATA & STORAGE
+// ===========================
+let DB = {
+  patients: {},
+  consultations: {},
+  nextHC: 1,
+  nextConsult: 1
+};
+
+function loadDB(){
+  const saved = localStorage.getItem('hce-ped-db');
+  if(saved){
+    try{ DB = JSON.parse(saved); }catch(e){ console.error(e); }
+  }
+}
+function saveDB(){
+  localStorage.setItem('hce-ped-db', JSON.stringify(DB));
+}
+
+// ===========================
+// GOOGLE SHEETS INTEGRATION
+// ===========================
+function getGSUrl(){ return localStorage.getItem('hce-gs-url')||''; }
+
+function openSettings(){
+  document.getElementById('settings-overlay').style.display='flex';
+  const url = getGSUrl();
+  if(url) document.getElementById('gs-url').value = url;
+  const doc = localStorage.getItem('hce-doctor')||'';
+  if(doc) document.getElementById('gs-doctor').value = doc;
+}
+function closeSettings(){
+  document.getElementById('settings-overlay').style.display='none';
+}
+function saveSettings(){
+  const url = document.getElementById('gs-url').value.trim();
+  const doc = document.getElementById('gs-doctor').value.trim();
+  localStorage.setItem('hce-gs-url', url);
+  localStorage.setItem('hce-doctor', doc);
+  closeSettings();
+  setSyncStatus(url ? '☁️ Drive configurado' : '');
+}
+
+function setSyncStatus(msg, color){
+  const el = document.getElementById('sync-status');
+  if(el){ el.textContent = msg; el.style.color = color||'rgba(255,255,255,0.8)'; }
+}
+
+async function syncConsultToSheets(consult, patient){
+  const url = getGSUrl();
+  if(!url) return;
+  setSyncStatus('⏳ Sincronizando...', '#fbd38d');
+  try {
+    const row = {
+      action: 'append',
+      hc: patient.hc,
+      nombre: patient.nombre,
+      fechaNac: patient.fechaNac,
+      sexo: patient.sexo === 'M' ? 'Masculino' : 'Femenino',
+      tutor: patient.tutor||'',
+      telefono: patient.telefono||'',
+      fecha: consult.fecha,
+      motivo: consult.motivo||'',
+      tiempo: consult.tiempo||'',
+      peso: consult.peso||'',
+      talla: consult.talla||'',
+      fc: consult.fc||'',
+      fr: consult.fr||'',
+      temp: consult.temp||'',
+      sato2: consult.sato2||'',
+      exfis: consult.exfis||'',
+      cie: consult.cie ? consult.cie.map(d=>d.code+' '+d.desc).join(' | ') : '',
+      tratamiento: consult.tratamiento ? consult.tratamiento.map(t=>t.med+' '+t.dosis+' '+t.frec+' x'+t.dias).join(' | ') : '',
+      examenes: consult.examenes||'',
+      interconsulta: consult.interconsulta||'',
+      referencia: consult.referencia ? 'Sí' : 'No',
+      proxCita: consult.proxCita||'',
+      observaciones: consult.observaciones||'',
+      consultId: consult.id
+    };
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(row)
+    });
+    const result = await resp.json();
+    if(result.status === 'ok'){
+      setSyncStatus('✅ Sincronizado', '#9ae6b4');
+      setTimeout(()=>setSyncStatus('☁️ Drive conectado'), 3000);
+    } else {
+      setSyncStatus('⚠️ Error sync', '#fc8181');
+    }
+  } catch(err){
+    setSyncStatus('⚠️ Sin conexión', '#fc8181');
+  }
+}
+
+async function importFromSheets(){
+  const url = getGSUrl();
+  if(!url){ showSettingsMsg('⚠️ Primero guarda la URL del Apps Script.','#c53030'); return; }
+  showSettingsMsg('⏳ Importando desde Drive...','#1a56a0');
+  try {
+    const resp = await fetch(url + '?action=getAll');
+    const data = await resp.json();
+    if(!data.rows || !data.rows.length){ showSettingsMsg('ℹ️ No se encontraron registros en Sheets.','#718096'); return; }
+    let imported = 0;
+    data.rows.forEach(row => {
+      // Reconstruct patient if not exists
+      const existingP = Object.values(DB.patients).find(p=>p.hc===row.hc);
+      let patientId;
+      if(existingP){ patientId = existingP.id; }
+      else {
+        patientId = 'p-imported-'+row.hc+'-'+Date.now();
+        DB.patients[patientId] = {
+          id: patientId, hc: row.hc, nombre: row.nombre,
+          fechaNac: row.fechaNac, sexo: row.sexo==='Masculino'?'M':'F',
+          tutor: row.tutor||'', telefono: row.telefono||'',
+          direccion: '', createdAt: row.fecha
+        };
+      }
+      // Only add consult if not already imported
+      const existingC = Object.values(DB.consultations).find(c=>c.id===row.consultId);
+      if(!existingC && row.consultId){
+        DB.consultations[row.consultId] = {
+          id: row.consultId, patientId, hc: row.hc, fecha: row.fecha,
+          motivo: row.motivo, tiempo: row.tiempo, peso: row.peso,
+          talla: row.talla, fc: row.fc, fr: row.fr, temp: row.temp,
+          sato2: row.sato2, exfis: row.exfis,
+          cie: row.cie ? row.cie.split(' | ').map(s=>({code:s.split(' ')[0],desc:s.split(' ').slice(1).join(' ')})) : [],
+          tratamiento: row.tratamiento ? row.tratamiento.split(' | ').map(s=>{
+            const parts=s.split(' '); return {med:parts[0]||'',dosis:parts[1]||'',frec:parts[2]||'',dias:(parts[3]||'').replace('x','')};
+          }) : [],
+          examenes: row.examenes, interconsulta: row.interconsulta,
+          referencia: row.referencia==='Sí', proxCita: row.proxCita, observaciones: row.observaciones
+        };
+        imported++;
+      }
+    });
+    saveDB();
+    updateSidebarCount();
+    showSettingsMsg('✅ '+imported+' consulta(s) importada(s) correctamente.','#276749');
+  } catch(err){
+    showSettingsMsg('❌ Error al importar: '+err.message,'#c53030');
+  }
+}
+
+async function testConnection(){
+  const url = document.getElementById('gs-url').value.trim();
+  if(!url){ showSettingsMsg('⚠️ Ingresa la URL primero.','#c53030'); return; }
+  showSettingsMsg('⏳ Probando conexión...','#1a56a0');
+  try {
+    const resp = await fetch(url+'?action=ping');
+    const data = await resp.json();
+    if(data.status==='ok') showSettingsMsg('✅ Conexión exitosa con Google Sheets.','#276749');
+    else showSettingsMsg('⚠️ Respuesta inesperada del servidor.','#c05621');
+  } catch(e){
+    showSettingsMsg('❌ No se pudo conectar. Verifica la URL y permisos.','#c53030');
+  }
+}
+
+function showSettingsMsg(msg, color){
+  const el = document.getElementById('settings-msg');
+  if(el){ el.textContent = msg; el.style.color = color||'#2d3748'; }
+}
+
+function copyAppsScript(){
+  const code = `// HCE Pediátrica — Google Apps Script
+// 1. Reemplaza SHEET_ID con el ID de tu Google Sheet
+// 2. Despliega como Web App (Ejecutar como: Tú, Acceso: Cualquiera)
+
+const SHEET_ID = 'PEGA_AQUI_EL_ID_DE_TU_SHEET';
+const SHEET_NAME = 'Consultas';
+
+const HEADERS = ['HC','Nombre','Fecha Nac','Sexo','Tutor','Teléfono','Fecha Consulta',
+  'Motivo','Tiempo Enf.','Peso','Talla','FC','FR','Temp','SatO2','Examen Físico',
+  'Diagnóstico CIE-10','Tratamiento','Exámenes Aux','Interconsulta','Referencia',
+  'Próxima Cita','Observaciones','ConsultID'];
+
+function doGet(e){
+  const action = e.parameter.action;
+  if(action === 'ping') return json({status:'ok'});
+  if(action === 'getAll') return json(getAllRows());
+  return json({status:'ok'});
+}
+
+function doPost(e){
+  try {
+    const data = JSON.parse(e.postData.contents);
+    if(data.action === 'append') appendRow(data);
+    return json({status:'ok'});
+  } catch(err){
+    return json({status:'error', message: err.message});
+  }
+}
+
+function getSheet(){
+  const ss = SpreadsheetApp.openById(SHEET_ID);
+  let sheet = ss.getSheetByName(SHEET_NAME);
+  if(!sheet){
+    sheet = ss.insertSheet(SHEET_NAME);
+    sheet.appendRow(HEADERS);
+    sheet.getRange(1,1,1,HEADERS.length).setFontWeight('bold').setBackground('#1a56a0').setFontColor('#ffffff');
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+function appendRow(d){
+  const sheet = getSheet();
+  sheet.appendRow([d.hc,d.nombre,d.fechaNac,d.sexo,d.tutor,d.telefono,d.fecha,
+    d.motivo,d.tiempo,d.peso,d.talla,d.fc,d.fr,d.temp,d.sato2,d.exfis,
+    d.cie,d.tratamiento,d.examenes,d.interconsulta,d.referencia,
+    d.proxCita,d.observaciones,d.consultId]);
+}
+
+function getAllRows(){
+  const sheet = getSheet();
+  const data = sheet.getDataRange().getValues();
+  if(data.length < 2) return {rows:[]};
+  const headers = data[0];
+  const rows = data.slice(1).map(row => {
+    const obj = {};
+    headers.forEach((h,i) => {
+      const key = h.toLowerCase().replace(/[^a-z0-9]/g,'');
+      obj[key] = row[i];
+    });
+    // Map back to expected keys
+    return {
+      hc: row[0], nombre: row[1], fechaNac: row[2], sexo: row[3],
+      tutor: row[4], telefono: row[5], fecha: row[6], motivo: row[7],
+      tiempo: row[8], peso: row[9], talla: row[10], fc: row[11],
+      fr: row[12], temp: row[13], sato2: row[14], exfis: row[15],
+      cie: row[16], tratamiento: row[17], examenes: row[18],
+      interconsulta: row[19], referencia: row[20], proxCita: row[21],
+      observaciones: row[22], consultId: row[23]
+    };
+  });
+  return {rows};
+}
+
+function json(obj){
+  return ContentService.createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}`;
+  navigator.clipboard.writeText(code).then(()=>{
+    showSettingsMsg('✅ Código copiado. Pégalo en script.google.com','#276749');
+  }).catch(()=>{
+    showSettingsMsg('⚠️ No se pudo copiar automáticamente. Abre la consola del navegador.','#c05621');
+    console.log(code);
+  });
+}
+
+function genHC(){
+  const n = String(DB.nextHC).padStart(6,'0');
+  DB.nextHC++;
+  return 'HC-'+n;
+}
+
+// ===========================
+// CIE-10 DATA
+// ===========================
+const CIE10 = [
+  {code:'J06.9',desc:'Infección aguda de vías respiratorias superiores, no especificada'},
+  {code:'J00',desc:'Rinofaringitis aguda (resfriado común)'},
+  {code:'J02.9',desc:'Faringitis aguda, no especificada'},
+  {code:'J03.9',desc:'Amigdalitis aguda, no especificada'},
+  {code:'J04.0',desc:'Laringitis aguda'},
+  {code:'J06.0',desc:'Laringofaringitis aguda'},
+  {code:'J18.9',desc:'Neumonía, no especificada'},
+  {code:'J18.0',desc:'Bronconeumonía, no especificada'},
+  {code:'J20.9',desc:'Bronquitis aguda, no especificada'},
+  {code:'J21.9',desc:'Bronquiolitis aguda, no especificada'},
+  {code:'J45.9',desc:'Asma, no especificada'},
+  {code:'J45.0',desc:'Asma predominantemente alérgica'},
+  {code:'H66.9',desc:'Otitis media, no especificada'},
+  {code:'H65.9',desc:'Otitis media no supurativa, no especificada'},
+  {code:'H10.9',desc:'Conjuntivitis, no especificada'},
+  {code:'A09',desc:'Diarrea y gastroenteritis de presunto origen infeccioso'},
+  {code:'K52.9',desc:'Gastroenteritis y colitis no infecciosa, no especificada'},
+  {code:'A08.0',desc:'Enteritis por rotavirus'},
+  {code:'K21.0',desc:'Enfermedad por reflujo gastroesofágico con esofagitis'},
+  {code:'K21.9',desc:'Enfermedad por reflujo gastroesofágico sin esofagitis'},
+  {code:'K59.0',desc:'Estreñimiento'},
+  {code:'K92.1',desc:'Melena'},
+  {code:'B05.9',desc:'Sarampión sin complicaciones'},
+  {code:'B06.9',desc:'Rubéola sin complicaciones'},
+  {code:'B01.9',desc:'Varicela sin complicaciones'},
+  {code:'B26.9',desc:'Parotiditis infecciosa sin complicaciones'},
+  {code:'B08.2',desc:'Exantema súbito (roseola)'},
+  {code:'B08.4',desc:'Estomatitis vesicular enteroviral con exantema'},
+  {code:'A37.9',desc:'Tosferina, no especificada'},
+  {code:'A38',desc:'Escarlatina'},
+  {code:'D50.9',desc:'Anemia por deficiencia de hierro, no especificada'},
+  {code:'D64.9',desc:'Anemia, no especificada'},
+  {code:'E44.0',desc:'Desnutrición proteicocalórica moderada'},
+  {code:'E44.1',desc:'Desnutrición proteicocalórica leve'},
+  {code:'E43',desc:'Desnutrición proteicocalórica grave, no especificada'},
+  {code:'E41',desc:'Marasmo nutricional'},
+  {code:'E40',desc:'Kwashiorkor'},
+  {code:'E55.0',desc:'Raquitismo activo'},
+  {code:'E64.0',desc:'Secuelas de desnutrición proteicocalórica'},
+  {code:'L20.9',desc:'Dermatitis atópica, no especificada'},
+  {code:'L22',desc:'Dermatitis del pañal'},
+  {code:'L23.9',desc:'Dermatitis alérgica de contacto, no especificada'},
+  {code:'B35.6',desc:'Tinea pedis (pie de atleta)'},
+  {code:'B36.0',desc:'Pitiriasis versicolor'},
+  {code:'B86',desc:'Escabiosis (sarna)'},
+  {code:'B85.0',desc:'Pediculosis debida a Pediculus humanus capitis'},
+  {code:'N39.0',desc:'Infección de vías urinarias, sitio no especificado'},
+  {code:'N30.0',desc:'Cistitis aguda'},
+  {code:'G40.9',desc:'Epilepsia, no especificada'},
+  {code:'G43.9',desc:'Migraña, no especificada'},
+  {code:'R56.0',desc:'Convulsiones febriles'},
+  {code:'R50.9',desc:'Fiebre, no especificada'},
+  {code:'R51',desc:'Cefalea'},
+  {code:'R05',desc:'Tos'},
+  {code:'R06.2',desc:'Sibilancias'},
+  {code:'J96.0',desc:'Insuficiencia respiratoria aguda'},
+  {code:'P07.3',desc:'Otros neonatos prematuros'},
+  {code:'P22.9',desc:'Dificultad respiratoria del recién nacido, no especificada'},
+  {code:'P59.9',desc:'Ictericia neonatal, no especificada'},
+  {code:'P36.9',desc:'Sepsis bacteriana del recién nacido, no especificada'},
+  {code:'Z00.1',desc:'Examen de control de salud del niño (rutina)'},
+  {code:'Z23',desc:'Necesidad de inmunización contra enfermedades bacterianas únicas'},
+  {code:'Z25',desc:'Necesidad de inmunización contra otras enfermedades virales únicas'},
+  {code:'Q21.0',desc:'Defecto del tabique interventricular'},
+  {code:'Q21.1',desc:'Defecto del tabique interauricular'},
+  {code:'F80.0',desc:'Trastorno específico de la pronunciación'},
+  {code:'F81.0',desc:'Trastorno específico de la lectura (dislexia)'},
+  {code:'F84.0',desc:'Autismo infantil'},
+  {code:'F90.0',desc:'Perturbación de la actividad y de la atención (TDAH)'},
+  {code:'M79.3',desc:'Paniculitis, no especificada'},
+  {code:'A15.0',desc:'Tuberculosis del pulmón, confirmada por cultivo'},
+  {code:'B20',desc:'Enfermedad por VIH, resultante en enfermedades infecciosas y parasitarias'},
+  {code:'Z29.2',desc:'Otro tipo de quimioprofilaxis'}
+];
+
+// ===========================
+// VACCINES MINSA PERU
+// ===========================
+const VACCINES = [
+  {name:'BCG',targetAge:0,targetAgeLabel:'Recién nacido',dosis:'1 dosis'},
+  {name:'Hepatitis B (monovalente)',targetAge:0,targetAgeLabel:'Recién nacido',dosis:'1 dosis'},
+  {name:'Pentavalente 1°',targetAge:2,targetAgeLabel:'2 meses',dosis:'1°'},
+  {name:'IPV 1°',targetAge:2,targetAgeLabel:'2 meses',dosis:'1°'},
+  {name:'Rotavirus 1°',targetAge:2,targetAgeLabel:'2 meses',dosis:'1°'},
+  {name:'Neumocócica 1°',targetAge:2,targetAgeLabel:'2 meses',dosis:'1°'},
+  {name:'Pentavalente 2°',targetAge:4,targetAgeLabel:'4 meses',dosis:'2°'},
+  {name:'IPV 2°',targetAge:4,targetAgeLabel:'4 meses',dosis:'2°'},
+  {name:'Rotavirus 2°',targetAge:4,targetAgeLabel:'4 meses',dosis:'2°'},
+  {name:'Neumocócica 2°',targetAge:4,targetAgeLabel:'4 meses',dosis:'2°'},
+  {name:'Pentavalente 3°',targetAge:6,targetAgeLabel:'6 meses',dosis:'3°'},
+  {name:'IPV 3°',targetAge:6,targetAgeLabel:'6 meses',dosis:'3°'},
+  {name:'Influenza 1° dosis',targetAge:7,targetAgeLabel:'7 meses',dosis:'1°'},
+  {name:'Influenza 2° dosis',targetAge:8,targetAgeLabel:'8 meses',dosis:'2°'},
+  {name:'Neumocócica (refuerzo)',targetAge:12,targetAgeLabel:'12 meses',dosis:'Refuerzo'},
+  {name:'Influenza (anual)',targetAge:12,targetAgeLabel:'12 meses',dosis:'Anual'},
+  {name:'SPR 1°',targetAge:12,targetAgeLabel:'12 meses',dosis:'1°'},
+  {name:'Varicela',targetAge:12,targetAgeLabel:'12 meses',dosis:'1 dosis'},
+  {name:'Hepatitis A',targetAge:12,targetAgeLabel:'12 meses',dosis:'1 dosis'},
+  {name:'Pentavalente (refuerzo)',targetAge:18,targetAgeLabel:'18 meses',dosis:'Refuerzo'},
+  {name:'IPV (refuerzo)',targetAge:18,targetAgeLabel:'18 meses',dosis:'Refuerzo'},
+  {name:'SPR 2°',targetAge:18,targetAgeLabel:'18 meses',dosis:'2°'},
+  {name:'DPT refuerzo 1°',targetAge:48,targetAgeLabel:'4 años',dosis:'Refuerzo 1°'},
+  {name:'IPV refuerzo 2°',targetAge:48,targetAgeLabel:'4 años',dosis:'Refuerzo 2°'},
+  {name:'SPR 3°',targetAge:48,targetAgeLabel:'4 años',dosis:'3°'},
+  {name:'DT (Toxoide) escolar',targetAge:72,targetAgeLabel:'6 años (escolar)',dosis:'1 dosis'},
+  {name:'VPH 1° (niñas)',targetAge:108,targetAgeLabel:'9 años',dosis:'1°'},
+  {name:'VPH 2° (niñas)',targetAge:114,targetAgeLabel:'9.5 años',dosis:'2°'}
+];
+
+// ===========================
+// WHO GROWTH DATA (simplified percentiles)
+// P3, P15, P50, P85, P97
+// ===========================
+// Weight-for-age boys (kg) by age in months 0-60 + years 6-10
+const WHO_W_BOYS = {
+  0:{p3:2.5,p15:2.9,p50:3.3,p85:3.9,p97:4.3},
+  1:{p3:3.4,p15:3.9,p50:4.5,p85:5.1,p97:5.7},
+  2:{p3:4.4,p15:5.0,p50:5.6,p85:6.3,p97:7.0},
+  3:{p3:5.1,p15:5.7,p50:6.4,p85:7.2,p97:7.9},
+  4:{p3:5.6,p15:6.2,p50:7.0,p85:7.8,p97:8.6},
+  5:{p3:6.0,p15:6.7,p50:7.5,p85:8.3,p97:9.2},
+  6:{p3:6.4,p15:7.1,p50:7.9,p85:8.8,p97:9.7},
+  9:{p3:7.1,p15:7.9,p50:8.9,p85:9.9,p97:10.8},
+  12:{p3:7.7,p15:8.6,p50:9.6,p85:10.8,p97:11.8},
+  18:{p3:8.8,p15:9.8,p50:10.9,p85:12.2,p97:13.4},
+  24:{p3:9.7,p15:10.8,p50:12.2,p85:13.6,p97:14.9},
+  36:{p3:11.4,p15:12.7,p50:14.3,p85:16.0,p97:17.7},
+  48:{p3:13.0,p15:14.5,p50:16.3,p85:18.4,p97:20.5},
+  60:{p3:14.1,p15:15.9,p50:18.3,p85:21.0,p97:23.4}
+};
+const WHO_W_GIRLS = {
+  0:{p3:2.4,p15:2.8,p50:3.2,p85:3.7,p97:4.2},
+  1:{p3:3.2,p15:3.6,p50:4.2,p85:4.8,p97:5.5},
+  2:{p3:4.0,p15:4.5,p50:5.1,p85:5.8,p97:6.5},
+  3:{p3:4.6,p15:5.2,p50:5.8,p85:6.6,p97:7.5},
+  4:{p3:5.1,p15:5.7,p50:6.4,p85:7.3,p97:8.2},
+  5:{p3:5.5,p15:6.1,p50:6.9,p85:7.8,p97:8.8},
+  6:{p3:5.7,p15:6.5,p50:7.3,p85:8.2,p97:9.3},
+  9:{p3:6.6,p15:7.3,p50:8.2,p85:9.3,p97:10.4},
+  12:{p3:7.1,p15:8.0,p50:8.9,p85:10.1,p97:11.4},
+  18:{p3:8.1,p15:9.2,p50:10.2,p85:11.5,p97:13.0},
+  24:{p3:9.0,p15:10.2,p50:11.5,p85:13.0,p97:14.6},
+  36:{p3:10.8,p15:12.1,p50:13.9,p85:15.8,p97:17.7},
+  48:{p3:12.3,p15:13.9,p50:16.1,p85:18.6,p97:21.1},
+  60:{p3:13.7,p15:15.5,p50:18.2,p85:21.5,p97:24.7}
+};
+// Height-for-age boys (cm)
+const WHO_H_BOYS = {
+  0:{p3:46.1,p15:47.5,p50:49.9,p85:52.3,p97:53.7},
+  3:{p3:57.3,p15:59.4,p50:61.4,p85:63.5,p97:65.5},
+  6:{p3:63.3,p15:65.5,p50:67.6,p85:69.8,p97:71.9},
+  9:{p3:68.0,p15:70.1,p50:72.3,p85:74.5,p97:76.5},
+  12:{p3:71.7,p15:74.0,p50:75.7,p85:77.6,p97:80.5},
+  18:{p3:77.5,p15:79.9,p50:82.3,p85:84.7,p97:87.0},
+  24:{p3:82.5,p15:85.1,p50:87.8,p85:90.4,p97:93.0},
+  36:{p3:89.0,p15:92.1,p50:96.1,p85:100.0,p97:103.2},
+  48:{p3:95.8,p15:99.3,p50:103.3,p85:107.3,p97:110.7},
+  60:{p3:101.5,p15:105.5,p50:110.0,p85:114.5,p97:118.0}
+};
+const WHO_H_GIRLS = {
+  0:{p3:45.6,p15:47.2,p50:49.1,p85:51.0,p97:52.9},
+  3:{p3:55.6,p15:57.7,p50:59.8,p85:61.9,p97:63.9},
+  6:{p3:61.5,p15:63.5,p50:65.7,p85:67.9,p97:70.0},
+  9:{p3:66.0,p15:68.2,p50:70.1,p85:72.4,p97:74.7},
+  12:{p3:69.2,p15:71.3,p50:74.0,p85:76.6,p97:79.2},
+  18:{p3:75.8,p15:78.2,p50:80.7,p85:83.4,p97:85.7},
+  24:{p3:80.0,p15:83.0,p50:86.4,p85:89.7,p97:93.1},
+  36:{p3:87.3,p15:90.7,p50:95.1,p85:99.3,p97:102.7},
+  48:{p3:94.1,p15:97.9,p50:102.7,p85:107.1,p97:111.3},
+  60:{p3:100.0,p15:104.5,p50:109.4,p85:114.2,p97:118.8}
+};
+
+// ===========================
+// UTILITY FUNCTIONS
+// ===========================
+function today(){
+  return new Date().toISOString().split('T')[0];
+}
+function formatDate(d){
+  if(!d) return '';
+  const [y,m,day] = d.split('-');
+  return `${day}/${m}/${y}`;
+}
+function calcAge(dob){
+  if(!dob) return null;
+  const birth = new Date(dob);
+  const now = new Date();
+  let years = now.getFullYear() - birth.getFullYear();
+  let months = now.getMonth() - birth.getMonth();
+  if(months < 0){ years--; months += 12; }
+  const days = now.getDate() - birth.getDate();
+  if(days < 0) months--;
+  if(months < 0){ years--; months += 12; }
+  return {years, months, totalMonths: years*12+months};
+}
+function ageLabel(dob){
+  const a = calcAge(dob);
+  if(!a) return '';
+  if(a.years === 0) return `${a.totalMonths} meses`;
+  if(a.months === 0) return `${a.years} años`;
+  return `${a.years} años ${a.months} meses`;
+}
+function getNearestAge(ageMonths, table){
+  const keys = Object.keys(table).map(Number).sort((a,b)=>a-b);
+  let nearest = keys[0];
+  for(let k of keys){ if(k <= ageMonths) nearest = k; }
+  return table[nearest];
+}
+function growthStatus(val, p3, p15, p85, p97){
+  if(val === '' || val === null || isNaN(val)) return {label:'Sin dato',cls:'gi-unknown',color:'#a0aec0'};
+  val = parseFloat(val);
+  if(val < p3) return {label:'Bajo < P3',cls:'gi-low',color:'#c53030'};
+  if(val < p15) return {label:'P3–P15 (riesgo)',cls:'gi-low',color:'#e53e3e'};
+  if(val <= p85) return {label:'Normal P15–P85',cls:'gi-normal',color:'#276749'};
+  if(val <= p97) return {label:'P85–P97 (sobrepeso)',cls:'gi-high',color:'#c05621'};
+  return {label:'Obeso > P97',cls:'gi-high',color:'#9b2c2c'};
+}
+
+// Normal vital sign ranges by age
+function vitalRanges(ageMonths){
+  if(ageMonths===null) return null;
+  if(ageMonths < 1) return {fc:'100–180',fr:'40–60',temp:'36.5–37.4',sato2:'95–100'};
+  if(ageMonths < 12) return {fc:'100–160',fr:'30–50',temp:'36.5–37.4',sato2:'95–100'};
+  if(ageMonths < 36) return {fc:'90–150',fr:'25–40',temp:'36.5–37.4',sato2:'95–100'};
+  if(ageMonths < 72) return {fc:'80–140',fr:'22–34',temp:'36.5–37.4',sato2:'95–100'};
+  if(ageMonths < 144) return {fc:'70–120',fr:'18–30',temp:'36.5–37.4',sato2:'95–100'};
+  return {fc:'60–100',fr:'12–20',temp:'36.5–37.4',sato2:'95–100'};
+}
+function vitalClass(val, range){
+  if(!val || !range) return '';
+  const v = parseFloat(val);
+  const [lo,hi] = range.split('–').map(Number);
+  if(v < lo*0.85 || v > hi*1.15) return 'danger';
+  if(v < lo || v > hi) return 'alert';
+  return 'ok';
+}
+
+// ===========================
+// VIEW ROUTING
+// ===========================
+let currentView = 'patients';
+let selectedPatientId = null;
+let selectedConsultId = null;
+
+function showView(view, patientId, consultId){
+  currentView = view;
+  if(patientId) selectedPatientId = patientId;
+  if(consultId) selectedConsultId = consultId;
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const navMap = {'patients':'nav-patients','new-consult':'nav-new-consult','history':'nav-history','search':'nav-search'};
+  const el = document.getElementById(navMap[view]);
+  if(el) el.classList.add('active');
+  const content = document.getElementById('content');
+  if(view==='patients') content.innerHTML = renderPatients();
+  else if(view==='new-consult') content.innerHTML = renderNewConsult();
+  else if(view==='history') content.innerHTML = renderHistory();
+  else if(view==='search') content.innerHTML = renderSearch();
+  updateSidebarCount();
+  attachEventListeners();
+}
+
+function updateSidebarCount(){
+  const n = Object.keys(DB.patients).length;
+  document.getElementById('patient-count-sidebar').textContent = n+' paciente'+(n!==1?'s':'')+' registrado'+(n!==1?'s':'');
+}
+
+// ===========================
+// PATIENT LIST VIEW
+// ===========================
+function renderPatients(){
+  const patients = Object.values(DB.patients).sort((a,b)=>a.nombre.localeCompare(b.nombre));
+  return `
+  <div class="card">
+    <div class="card-title">👥 Pacientes Registrados
+      <button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="showView('new-consult')">+ Nueva Consulta</button>
+    </div>
+    <div class="search-bar">
+      <span class="search-icon">🔍</span>
+      <input type="text" placeholder="Buscar por nombre o N° HC..." id="patient-search" oninput="filterPatients(this.value)" />
+    </div>
+    <div id="patient-list-container">
+      ${renderPatientList(patients)}
+    </div>
+  </div>`;
+}
+
+function renderPatientList(patients){
+  if(!patients.length){
+    return `<div class="empty-state">
+      <div class="empty-icon">🩺</div>
+      <p>No hay pacientes registrados aún</p>
+      <p class="hint">Usa "Nueva Consulta" para registrar el primer paciente</p>
+    </div>`;
+  }
+  return `<div class="patient-list">${patients.map(p=>{
+    const consultList = Object.values(DB.consultations).filter(c=>c.patientId===p.id);
+    const lastC = consultList.sort((a,b)=>b.fecha.localeCompare(a.fecha))[0];
+    const age = ageLabel(p.fechaNac);
+    return `<div class="patient-card" onclick="showView('history','${p.id}')">
+      <div>
+        <div class="patient-name">${p.nombre}</div>
+        <div class="patient-info">${age} &bull; ${p.sexo==='M'?'Masculino':'Femenino'} &bull; ${p.telefono||'Sin teléfono'}</div>
+        ${lastC?`<div class="patient-info">Última consulta: ${formatDate(lastC.fecha)}</div>`:'<div class="patient-info" style="color:#e53e3e">Sin consultas registradas</div>'}
+      </div>
+      <div class="patient-meta">
+        <div class="patient-hc">${p.hc}</div>
+        <div style="margin-top:4px"><span class="badge badge-blue">${consultList.length} consulta${consultList.length!==1?'s':''}</span></div>
+        <div style="margin-top:6px">
+          <button class="btn btn-outline btn-sm" onclick="event.stopPropagation();newConsultForPatient('${p.id}')">+ Consulta</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function filterPatients(q){
+  const patients = Object.values(DB.patients).filter(p=>
+    p.nombre.toLowerCase().includes(q.toLowerCase()) ||
+    p.hc.toLowerCase().includes(q.toLowerCase())
+  ).sort((a,b)=>a.nombre.localeCompare(b.nombre));
+  document.getElementById('patient-list-container').innerHTML = renderPatientList(patients);
+}
+
+// ===========================
+// NEW CONSULT VIEW
+// ===========================
+let treatmentRows = [];
+let selectedCIE = [];
+let formPatientId = null; // if editing existing patient
+
+function newConsultForPatient(pid){
+  formPatientId = pid;
+  showView('new-consult');
+}
+
+function renderNewConsult(){
+  const t = today();
+  const hc = formPatientId ? DB.patients[formPatientId].hc : genHCPreview();
+  const p = formPatientId ? DB.patients[formPatientId] : null;
+
+  treatmentRows = [{med:'',dosis:'',frec:'',dias:''}];
+  selectedCIE = [];
+
+  return `
+  <div class="print-header" style="display:none">
+    <h2 style="text-align:center;margin-bottom:4px">HISTORIA CLÍNICA PEDIÁTRICA</h2>
+    <p style="text-align:center;font-size:12px">Consultorio Particular</p>
+    <hr style="margin:8px 0">
+  </div>
+
+  <form id="consult-form" onsubmit="saveConsult(event)">
+
+  <!-- HC HEADER -->
+  <div class="card">
+    <div class="card-title">📋 Datos de la Historia Clínica</div>
+    <div class="section-grid cols-4">
+      <div class="field">
+        <label>N° HC</label>
+        <input type="text" id="f-hc" value="${hc}" readonly style="background:#f7fafc;font-weight:700;color:#1a56a0">
+      </div>
+      <div class="field">
+        <label>Fecha</label>
+        <input type="date" id="f-fecha" value="${t}" required>
+      </div>
+      <div class="field">
+        <label>Establecimiento</label>
+        <input type="text" id="f-estab" placeholder="Centro de Salud / Hospital" value="">
+      </div>
+      <div class="field">
+        <label>Médico</label>
+        <input type="text" id="f-medico" placeholder="Dr./Dra." value="">
+      </div>
+    </div>
+  </div>
+
+  <!-- FILIACION -->
+  <div class="card">
+    <div class="card-title">👤 Datos de Filiación</div>
+    <div class="section-grid" style="grid-template-columns:2fr 1fr 1fr 1fr">
+      <div class="field">
+        <label class="required">Nombre completo</label>
+        <input type="text" id="f-nombre" placeholder="Apellidos y nombres" required value="${p?p.nombre:''}">
+      </div>
+      <div class="field">
+        <label class="required">Fecha de nacimiento</label>
+        <input type="date" id="f-dob" required value="${p?p.fechaNac:''}" onchange="updateAge()">
+      </div>
+      <div class="field">
+        <label>Edad calculada</label>
+        <input type="text" id="f-age-display" readonly style="background:#f7fafc;font-weight:600" value="${p?ageLabel(p.fechaNac):''}">
+      </div>
+      <div class="field">
+        <label class="required">Sexo</label>
+        <select id="f-sexo" required onchange="updateAge()">
+          <option value="">Seleccionar</option>
+          <option value="M" ${p&&p.sexo==='M'?'selected':''}>Masculino</option>
+          <option value="F" ${p&&p.sexo==='F'?'selected':''}>Femenino</option>
+        </select>
+      </div>
+    </div>
+    <div class="section-grid cols-3" style="margin-top:12px">
+      <div class="field">
+        <label>Nombre del padre/madre/tutor</label>
+        <input type="text" id="f-tutor" placeholder="Nombre del responsable" value="${p?p.tutor:''}">
+      </div>
+      <div class="field">
+        <label>Teléfono de contacto</label>
+        <input type="tel" id="f-tel" placeholder="999 999 999" value="${p?p.telefono:''}">
+      </div>
+      <div class="field">
+        <label>Dirección</label>
+        <input type="text" id="f-dir" placeholder="Dirección del paciente" value="${p?p.direccion:''}">
+      </div>
+    </div>
+  </div>
+
+  <!-- ANTROPOMETRIA -->
+  <div class="card">
+    <div class="card-title">📏 Antropometría y Estado Nutricional</div>
+    <div class="vitals-grid" id="antro-grid">
+      <div class="vital-box">
+        <label>Peso</label>
+        <input type="number" id="f-peso" step="0.1" min="0" placeholder="0.0" oninput="updateGrowth()">
+        <div class="unit">kg</div>
+      </div>
+      <div class="vital-box">
+        <label>Talla</label>
+        <input type="number" id="f-talla" step="0.1" min="0" placeholder="0.0" oninput="updateGrowth()">
+        <div class="unit">cm</div>
+      </div>
+      <div class="vital-box" id="pc-box">
+        <label>Perímetro Cefálico</label>
+        <input type="number" id="f-pc" step="0.1" min="0" placeholder="0.0">
+        <div class="unit">cm</div>
+      </div>
+      <div class="vital-box">
+        <label>IMC</label>
+        <input type="text" id="f-imc" readonly style="font-size:18px;font-weight:700;color:#1a56a0;border:none;background:none;text-align:center">
+        <div class="unit">kg/m²</div>
+      </div>
+    </div>
+    <div id="growth-status-container" style="margin-top:14px"></div>
+  </div>
+
+  <!-- MOTIVO DE CONSULTA -->
+  <div class="card">
+    <div class="card-title">🩺 Motivo de Consulta y Anamnesis</div>
+    <div class="section-grid cols-2">
+      <div class="field">
+        <label class="required">Motivo de consulta</label>
+        <input type="text" id="f-motivo" placeholder="Motivo principal de la consulta" required>
+      </div>
+      <div class="field">
+        <label>Tiempo de enfermedad</label>
+        <input type="text" id="f-tiempo" placeholder="Ej: 3 días, 2 semanas">
+      </div>
+    </div>
+    <div class="field field-full" style="margin-top:12px">
+      <label>Anamnesis</label>
+      <textarea id="f-anamnesis" rows="4" placeholder="Descripción detallada de la enfermedad actual, evolución, síntomas acompañantes..."></textarea>
+    </div>
+  </div>
+
+  <!-- ANTECEDENTES (COLLAPSIBLE) -->
+  <div class="card">
+    <div class="collapsible-header" onclick="toggleCollapsible('antecedentes')">
+      <div class="card-title" style="border:none;margin:0;padding:0">📁 Antecedentes</div>
+      <span class="chevron" id="chevron-antecedentes">▼</span>
+    </div>
+    <div class="collapsible-content closed" id="col-antecedentes">
+      <div style="padding-top:14px">
+        <div class="section-grid cols-2">
+          <div class="field">
+            <label>Antecedentes perinatales</label>
+            <textarea id="f-ant-peri" rows="3" placeholder="Edad gestacional, tipo de parto, APGAR, complicaciones al nacer..."></textarea>
+          </div>
+          <div class="field">
+            <label>Antecedentes patológicos</label>
+            <textarea id="f-ant-pat" rows="3" placeholder="Enfermedades previas, hospitalizaciones, cirugías, alergias..."></textarea>
+          </div>
+          <div class="field">
+            <label>Desarrollo psicomotor</label>
+            <textarea id="f-ant-dpm" rows="2" placeholder="Sonrisa social, sostén cefálico, sedestación, marcha, lenguaje..."></textarea>
+          </div>
+          <div class="field">
+            <label>Antecedentes familiares</label>
+            <textarea id="f-ant-fam" rows="2" placeholder="Enfermedades heredofamiliares relevantes..."></textarea>
+          </div>
+        </div>
+        <div class="field field-full" style="margin-top:10px">
+          <label>Antecedentes alimentarios / Lactancia</label>
+          <textarea id="f-ant-alim" rows="2" placeholder="Lactancia materna, inicio de alimentación complementaria, dieta actual..."></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FUNCIONES VITALES -->
+  <div class="card">
+    <div class="card-title">❤️ Funciones Vitales</div>
+    <div id="vital-ranges-alert" class="alert alert-info" style="margin-bottom:10px;display:none"></div>
+    <div class="vitals-grid">
+      <div class="vital-box">
+        <label>FC</label>
+        <input type="number" id="f-fc" placeholder="—" min="0" oninput="checkVitals()">
+        <div class="unit">lpm</div>
+        <div class="vital-range" id="range-fc"></div>
+      </div>
+      <div class="vital-box">
+        <label>FR</label>
+        <input type="number" id="f-fr" placeholder="—" min="0" oninput="checkVitals()">
+        <div class="unit">rpm</div>
+        <div class="vital-range" id="range-fr"></div>
+      </div>
+      <div class="vital-box">
+        <label>T°</label>
+        <input type="number" id="f-temp" placeholder="—" step="0.1" min="30" max="43" oninput="checkVitals()">
+        <div class="unit">°C</div>
+        <div class="vital-range" id="range-temp"></div>
+      </div>
+      <div class="vital-box">
+        <label>Sat O₂</label>
+        <input type="number" id="f-sato2" placeholder="—" min="0" max="100" oninput="checkVitals()">
+        <div class="unit">%</div>
+        <div class="vital-range" id="range-sato2"></div>
+      </div>
+    </div>
+    <div class="section-grid cols-2" style="margin-top:12px">
+      <div class="field">
+        <label>Presión Arterial</label>
+        <input type="text" id="f-pa" placeholder="Ej: 100/60 mmHg">
+      </div>
+      <div class="field">
+        <label>Glasgow (si aplica)</label>
+        <input type="number" id="f-glasgow" min="3" max="15" placeholder="3–15">
+      </div>
+    </div>
+  </div>
+
+  <!-- EXAMEN FISICO -->
+  <div class="card">
+    <div class="card-title">🔬 Examen Físico</div>
+    <div class="field">
+      <textarea id="f-exfis" rows="5" placeholder="Hallazgos del examen físico por aparatos y sistemas. Ej:&#10;General: AREG, AREH, AREN...&#10;Piel: sin lesiones...&#10;Resp: MV pasa bien bilateral, sin agregados..."></textarea>
+    </div>
+  </div>
+
+  <!-- DIAGNOSTICO CIE-10 -->
+  <div class="card">
+    <div class="card-title">🏷️ Diagnóstico (CIE-10)</div>
+    <div class="cie-wrapper">
+      <div class="field">
+        <label>Buscar diagnóstico</label>
+        <input type="text" id="cie-search" placeholder="Buscar por código o descripción..." autocomplete="off"
+          oninput="searchCIE(this.value)" onblur="hideCIEResults()">
+      </div>
+      <div class="cie-results" id="cie-results" style="display:none"></div>
+    </div>
+    <div class="cie-selected" id="cie-selected"></div>
+    <input type="hidden" id="f-cie-data" value="[]">
+    <div class="field" style="margin-top:10px">
+      <label>Tipo de diagnóstico</label>
+      <select id="f-cie-tipo">
+        <option value="definitivo">Definitivo</option>
+        <option value="presuntivo">Presuntivo</option>
+        <option value="descartado">Descartado</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- TRATAMIENTO -->
+  <div class="card">
+    <div class="card-title">💊 Tratamiento / Receta</div>
+    <div class="treatment-rows" id="treatment-rows">
+      ${renderTreatmentRows()}
+    </div>
+    <button type="button" class="btn btn-ghost btn-sm" onclick="addTreatmentRow()">+ Agregar medicamento</button>
+    <div class="field field-full" style="margin-top:14px">
+      <label>Indicaciones generales</label>
+      <textarea id="f-indicaciones" rows="2" placeholder="Medidas generales, indicaciones de enfermería, dieta, reposo..."></textarea>
+    </div>
+  </div>
+
+  <!-- EXAMENES AUX -->
+  <div class="card">
+    <div class="card-title">🧪 Exámenes Auxiliares</div>
+    <div class="section-grid cols-2">
+      <div class="field">
+        <label>Exámenes solicitados</label>
+        <textarea id="f-examenes" rows="3" placeholder="Hemograma, PCR, hemocultivo, Rx, ecografía..."></textarea>
+      </div>
+      <div class="field">
+        <label>Resultados / Interpretación</label>
+        <textarea id="f-resultados" rows="3" placeholder="Resultados de exámenes previos o del día..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- INTERCONSULTA / REFERENCIA -->
+  <div class="card">
+    <div class="card-title">🔄 Interconsulta y Referencia</div>
+    <div class="section-grid cols-2">
+      <div class="field">
+        <label>Interconsulta</label>
+        <textarea id="f-interconsulta" rows="2" placeholder="Especialidad solicitada, motivo..."></textarea>
+      </div>
+      <div class="field">
+        <label>Próxima cita</label>
+        <input type="date" id="f-prox-cita" min="${today()}">
+        <div class="hint">Fecha de próxima evaluación o control</div>
+      </div>
+    </div>
+    <div style="margin-top:12px">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600;font-size:13px">
+        <input type="checkbox" id="f-referencia" onchange="toggleReferencia()" style="transform:scale(1.3);accent-color:#1a56a0">
+        Paciente requiere referencia / transferencia
+      </label>
+      <div id="referencia-detail" style="display:none;margin-top:10px">
+        <div class="field">
+          <textarea id="f-ref-detalle" rows="2" placeholder="Destino, nivel de atención, motivo de referencia, condición al traslado..."></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VACUNAS -->
+  <div class="card">
+    <div class="card-title">💉 Calendario de Vacunas — MINSA Perú (Esquema Oficial)</div>
+    <div class="alert alert-info" id="vaccine-alert">Ingresa la fecha de nacimiento y el sexo para ver el estado de vacunas.</div>
+    <div id="vaccine-grid" class="vaccine-grid" style="margin-top:10px"></div>
+    <input type="hidden" id="f-vaccines" value="{}">
+  </div>
+
+  <!-- OBSERVACIONES -->
+  <div class="card">
+    <div class="card-title">📝 Observaciones Finales</div>
+    <div class="field">
+      <textarea id="f-obs" rows="3" placeholder="Observaciones adicionales, notas de seguimiento, plan de manejo..."></textarea>
+    </div>
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="card no-print">
+    <div class="btn-group">
+      <button type="submit" class="btn btn-success">💾 Guardar Historia Clínica</button>
+      <button type="button" class="btn btn-outline" onclick="printForm()">🖨️ Imprimir / PDF</button>
+      <button type="button" class="btn btn-ghost" onclick="showView('patients');formPatientId=null;">✖ Cancelar</button>
+    </div>
+  </div>
+
+  </form>`;
+}
+
+function genHCPreview(){
+  return 'HC-'+String(DB.nextHC).padStart(6,'0');
+}
+
+// ===========================
+// COLLAPSIBLE
+// ===========================
+function toggleCollapsible(id){
+  const content = document.getElementById('col-'+id);
+  const chevron = document.getElementById('chevron-'+id);
+  const isOpen = content.classList.contains('open');
+  content.classList.toggle('open',!isOpen);
+  content.classList.toggle('closed',isOpen);
+  chevron.classList.toggle('open',!isOpen);
+}
+
+// ===========================
+// AGE UPDATE
+// ===========================
+function updateAge(){
+  const dob = document.getElementById('f-dob')?.value;
+  const sexo = document.getElementById('f-sexo')?.value;
+  if(!dob) return;
+  const a = calcAge(dob);
+  const el = document.getElementById('f-age-display');
+  if(el) el.value = ageLabel(dob);
+  const pcBox = document.getElementById('pc-box');
+  if(pcBox) pcBox.style.display = a && a.totalMonths < 24 ? 'block' : 'none';
+  checkVitals();
+  updateVaccines(dob);
+  updateGrowth();
+}
+
+// ===========================
+// GROWTH / NUTRITION
+// ===========================
+function updateGrowth(){
+  const dob = document.getElementById('f-dob')?.value;
+  const sexo = document.getElementById('f-sexo')?.value;
+  const peso = document.getElementById('f-peso')?.value;
+  const talla = document.getElementById('f-talla')?.value;
+  const container = document.getElementById('growth-status-container');
+  if(!container) return;
+
+  // IMC
+  const imcEl = document.getElementById('f-imc');
+  if(peso && talla && parseFloat(talla)>0){
+    const imc = (parseFloat(peso)/Math.pow(parseFloat(talla)/100,2)).toFixed(1);
+    if(imcEl) imcEl.value = imc;
+  } else { if(imcEl) imcEl.value = ''; }
+
+  if(!dob || !sexo){
+    container.innerHTML = '';
+    return;
+  }
+  const a = calcAge(dob);
+  if(!a){ container.innerHTML=''; return; }
+  const ageM = a.totalMonths;
+  const isMale = sexo==='M';
+  const wTable = isMale ? WHO_W_BOYS : WHO_W_GIRLS;
+  const hTable = isMale ? WHO_H_BOYS : WHO_H_GIRLS;
+  const wr = getNearestAge(Math.min(ageM,60), wTable);
+  const hr = getNearestAge(Math.min(ageM,60), hTable);
+
+  const wStat = peso ? growthStatus(peso, wr.p3, wr.p15, wr.p85, wr.p97) : {label:'Sin dato',cls:'gi-unknown'};
+  const hStat = talla ? growthStatus(talla, hr.p3, hr.p15, hr.p85, hr.p97) : {label:'Sin dato',cls:'gi-unknown'};
+
+  let warn = '';
+  if(wStat.label.includes('Bajo') || hStat.label.includes('Bajo')) warn = `<div class="alert alert-warning" style="margin-top:10px">⚠️ Se detectan indicadores por debajo del rango normal (< P3). Evaluar estado nutricional y referir si corresponde.</div>`;
+
+  container.innerHTML = `
+    <div class="growth-card">
+      <div class="growth-indicator ${wStat.cls}">
+        <div class="gi-label">Peso/Edad</div>
+        <div class="gi-value" style="color:${wStat.color||'#4a5568'}">${peso?peso+' kg':'—'}</div>
+        <div class="gi-status" style="background:${wStat.cls==='gi-normal'?'#9ae6b4':wStat.cls==='gi-low'?'#fc8181':'#fbd38d'};color:#1a202c">${wStat.label}</div>
+        <div class="text-sm" style="margin-top:6px">P50 para edad: ${wr.p50} kg</div>
+      </div>
+      <div class="growth-indicator ${hStat.cls}">
+        <div class="gi-label">Talla/Edad</div>
+        <div class="gi-value" style="color:${hStat.color||'#4a5568'}">${talla?talla+' cm':'—'}</div>
+        <div class="gi-status" style="background:${hStat.cls==='gi-normal'?'#9ae6b4':hStat.cls==='gi-low'?'#fc8181':'#fbd38d'};color:#1a202c">${hStat.label}</div>
+        <div class="text-sm" style="margin-top:6px">P50 para edad: ${hr.p50} cm</div>
+      </div>
+      <div class="growth-indicator gi-unknown">
+        <div class="gi-label">Clasificación OMS</div>
+        <div class="gi-value" style="font-size:14px;color:#4a5568">${classifyWHO(wStat.label, hStat.label)}</div>
+        <div class="text-sm" style="margin-top:6px">Basado en OMS 2006/2007</div>
+      </div>
+    </div>
+    ${warn}`;
+}
+
+function classifyWHO(wLabel, hLabel){
+  if(wLabel.includes('< P3') && hLabel.includes('< P3')) return 'Desnutrición global y talla baja';
+  if(wLabel.includes('< P3')) return 'Desnutrición global';
+  if(hLabel.includes('< P3')) return 'Talla baja severa';
+  if(wLabel.includes('P3–P15')) return 'Riesgo de desnutrición';
+  if(hLabel.includes('P3–P15')) return 'Riesgo talla baja';
+  if(wLabel.includes('P85–P97')) return 'Sobrepeso';
+  if(wLabel.includes('> P97')) return 'Obesidad';
+  if(wLabel==='Sin dato' || hLabel==='Sin dato') return 'Sin datos suficientes';
+  return 'Eutrófico (normal)';
+}
+
+// ===========================
+// VITAL SIGNS CHECK
+// ===========================
+function checkVitals(){
+  const dob = document.getElementById('f-dob')?.value;
+  if(!dob) return;
+  const a = calcAge(dob);
+  const ranges = a ? vitalRanges(a.totalMonths) : null;
+  if(!ranges) return;
+  const alertEl = document.getElementById('vital-ranges-alert');
+  if(alertEl){
+    alertEl.style.display='block';
+    alertEl.innerHTML = `<strong>Rangos normales para ${ageLabel(dob)}:</strong> FC: ${ranges.fc} lpm &bull; FR: ${ranges.fr} rpm &bull; T°: ${ranges.temp} °C &bull; SpO₂: ${ranges.sato2}%`;
+  }
+  const fields = [{id:'f-fc',rangeId:'range-fc',range:ranges.fc},{id:'f-fr',rangeId:'range-fr',range:ranges.fr},{id:'f-temp',rangeId:'range-temp',range:ranges.temp},{id:'f-sato2',rangeId:'range-sato2',range:ranges.sato2}];
+  fields.forEach(({id,rangeId,range})=>{
+    const inp = document.getElementById(id);
+    const rEl = document.getElementById(rangeId);
+    if(!inp || !rEl) return;
+    const cls = vitalClass(inp.value, range);
+    rEl.className = 'vital-range'+( cls?' '+cls:'');
+    rEl.textContent = 'Normal: '+range;
+  });
+}
+
+// ===========================
+// VACCINES
+// ===========================
+let vaccineState = {};
+
+function updateVaccines(dob){
+  if(!dob) return;
+  const a = calcAge(dob);
+  if(!a) return;
+  const ageM = a.totalMonths;
+  const grid = document.getElementById('vaccine-grid');
+  const alertEl = document.getElementById('vaccine-alert');
+  if(!grid) return;
+  if(alertEl) alertEl.style.display='none';
+
+  const rows = VACCINES.map((v,i)=>{
+    const due = v.targetAge <= ageM;
+    const overdue = v.targetAge < ageM - 1;
+    const checked = vaccineState[i] || false;
+    let cls = 'vaccine-item';
+    let badgeHtml = '';
+    if(checked){ cls+=' done'; badgeHtml='<span class="vac-badge" style="background:#9ae6b4;color:#276749">Aplicada</span>'; }
+    else if(overdue){ cls+=' overdue'; badgeHtml='<span class="vac-badge" style="background:#fc8181;color:#9b2c2c">Pendiente</span>'; }
+    else if(due){ cls+=' pending'; badgeHtml='<span class="vac-badge" style="background:#fbd38d;color:#744210">Programada</span>'; }
+    else { badgeHtml='<span class="vac-badge" style="background:#e2e8f0;color:#718096">Próxima</span>'; }
+
+    return `<div class="${cls}">
+      <input type="checkbox" id="vac-${i}" ${checked?'checked':''} onchange="vaccineState[${i}]=this.checked;saveVaccineState()">
+      <div class="vac-info">
+        <div class="vac-name">${v.name}</div>
+        <div class="vac-age">${v.targetAgeLabel} &bull; ${v.dosis}</div>
+      </div>
+      ${badgeHtml}
+    </div>`;
+  }).join('');
+  grid.innerHTML = rows;
+}
+
+function saveVaccineState(){
+  const el = document.getElementById('f-vaccines');
+  if(el) el.value = JSON.stringify(vaccineState);
+}
+
+// ===========================
+// CIE-10
+// ===========================
+let cieTimeout = null;
+
+function searchCIE(q){
+  clearTimeout(cieTimeout);
+  cieTimeout = setTimeout(()=>{
+    const res = document.getElementById('cie-results');
+    if(!res) return;
+    if(q.length < 2){ res.style.display='none'; return; }
+    const matches = CIE10.filter(c=>
+      c.code.toLowerCase().includes(q.toLowerCase()) ||
+      c.desc.toLowerCase().includes(q.toLowerCase())
+    ).slice(0,12);
+    if(!matches.length){ res.style.display='none'; return; }
+    res.innerHTML = matches.map(c=>`
+      <div class="cie-item" onmousedown="addCIE('${c.code}','${c.desc.replace(/'/g,"\\'")}')">
+        <span class="code">${c.code}</span><span class="desc">${c.desc}</span>
+      </div>`).join('');
+    res.style.display='block';
+  },150);
+}
+
+function hideCIEResults(){
+  setTimeout(()=>{ const r=document.getElementById('cie-results'); if(r) r.style.display='none'; },200);
+}
+
+function addCIE(code, desc){
+  if(selectedCIE.find(c=>c.code===code)) return;
+  selectedCIE.push({code,desc});
+  renderCIESelected();
+  const inp = document.getElementById('cie-search');
+  if(inp){ inp.value=''; }
+}
+
+function removeCIE(code){
+  selectedCIE = selectedCIE.filter(c=>c.code!==code);
+  renderCIESelected();
+}
+
+function renderCIESelected(){
+  const el = document.getElementById('cie-selected');
+  const hidden = document.getElementById('f-cie-data');
+  if(!el) return;
+  el.innerHTML = selectedCIE.map(c=>`
+    <div class="cie-tag">
+      <strong>${c.code}</strong> ${c.desc.length>40?c.desc.substring(0,40)+'...':c.desc}
+      <button type="button" onclick="removeCIE('${c.code}')">×</button>
+    </div>`).join('');
+  if(hidden) hidden.value = JSON.stringify(selectedCIE);
+}
+
+// ===========================
+// TREATMENT ROWS
+// ===========================
+function renderTreatmentRows(){
+  return treatmentRows.map((r,i)=>`
+    <div class="treatment-row" id="tr-${i}">
+      <input type="text" placeholder="Medicamento / Concentración" value="${r.med}" oninput="treatmentRows[${i}].med=this.value">
+      <input type="text" placeholder="Dosis" value="${r.dosis}" oninput="treatmentRows[${i}].dosis=this.value">
+      <input type="text" placeholder="Frecuencia" value="${r.frec}" oninput="treatmentRows[${i}].frec=this.value">
+      <input type="text" placeholder="Días" value="${r.dias}" oninput="treatmentRows[${i}].dias=this.value">
+      <button type="button" class="del-btn" onclick="removeTreatmentRow(${i})">×</button>
+    </div>`).join('');
+}
+
+function addTreatmentRow(){
+  treatmentRows.push({med:'',dosis:'',frec:'',dias:''});
+  document.getElementById('treatment-rows').innerHTML = renderTreatmentRows();
+}
+
+function removeTreatmentRow(i){
+  if(treatmentRows.length===1){ treatmentRows[0]={med:'',dosis:'',frec:'',dias:''}; }
+  else { treatmentRows.splice(i,1); }
+  document.getElementById('treatment-rows').innerHTML = renderTreatmentRows();
+}
+
+// ===========================
+// REFERENCIA TOGGLE
+// ===========================
+function toggleReferencia(){
+  const cb = document.getElementById('f-referencia');
+  const det = document.getElementById('referencia-detail');
+  if(det) det.style.display = cb.checked ? 'block' : 'none';
+}
+
+// ===========================
+// SAVE CONSULTATION
+// ===========================
+function saveConsult(e){
+  e.preventDefault();
+  const hc = document.getElementById('f-hc').value;
+  const fecha = document.getElementById('f-fecha').value;
+  const nombre = document.getElementById('f-nombre').value.trim();
+  const dob = document.getElementById('f-dob').value;
+  const sexo = document.getElementById('f-sexo').value;
+
+  if(!nombre || !dob || !sexo){
+    alert('Completa los campos obligatorios: nombre, fecha de nacimiento y sexo.');
+    return;
+  }
+
+  // Find or create patient
+  let patientId = formPatientId;
+  if(!patientId){
+    // Check if same patient exists (by name + dob)
+    const existing = Object.values(DB.patients).find(p=>
+      p.nombre.toLowerCase()===nombre.toLowerCase() && p.fechaNac===dob
+    );
+    if(existing){ patientId = existing.id; }
+    else{
+      patientId = 'p-'+Date.now();
+      DB.patients[patientId] = {
+        id: patientId,
+        hc,
+        nombre,
+        fechaNac: dob,
+        sexo,
+        tutor: document.getElementById('f-tutor').value,
+        telefono: document.getElementById('f-tel').value,
+        direccion: document.getElementById('f-dir').value,
+        createdAt: fecha
+      };
+      DB.nextHC++;
+    }
+  } else {
+    // Update patient data
+    DB.patients[patientId].nombre = nombre;
+    DB.patients[patientId].fechaNac = dob;
+    DB.patients[patientId].sexo = sexo;
+    DB.patients[patientId].tutor = document.getElementById('f-tutor').value;
+    DB.patients[patientId].telefono = document.getElementById('f-tel').value;
+    DB.patients[patientId].direccion = document.getElementById('f-dir').value;
+  }
+
+  const consultId = 'c-'+Date.now();
+  const consult = {
+    id: consultId,
+    patientId,
+    hc: DB.patients[patientId].hc,
+    fecha,
+    estab: document.getElementById('f-estab').value,
+    medico: document.getElementById('f-medico').value,
+    peso: document.getElementById('f-peso').value,
+    talla: document.getElementById('f-talla').value,
+    pc: document.getElementById('f-pc')?.value||'',
+    fc: document.getElementById('f-fc').value,
+    fr: document.getElementById('f-fr').value,
+    temp: document.getElementById('f-temp').value,
+    sato2: document.getElementById('f-sato2').value,
+    pa: document.getElementById('f-pa').value,
+    glasgow: document.getElementById('f-glasgow').value,
+    motivo: document.getElementById('f-motivo').value,
+    tiempo: document.getElementById('f-tiempo').value,
+    anamnesis: document.getElementById('f-anamnesis').value,
+    antPeri: document.getElementById('f-ant-peri').value,
+    antPat: document.getElementById('f-ant-pat').value,
+    antDpm: document.getElementById('f-ant-dpm').value,
+    antFam: document.getElementById('f-ant-fam').value,
+    antAlim: document.getElementById('f-ant-alim').value,
+    exfis: document.getElementById('f-exfis').value,
+    cie: JSON.parse(document.getElementById('f-cie-data').value||'[]'),
+    cieTipo: document.getElementById('f-cie-tipo').value,
+    tratamiento: treatmentRows.filter(r=>r.med),
+    indicaciones: document.getElementById('f-indicaciones').value,
+    examenes: document.getElementById('f-examenes').value,
+    resultados: document.getElementById('f-resultados').value,
+    interconsulta: document.getElementById('f-interconsulta').value,
+    proxCita: document.getElementById('f-prox-cita').value,
+    referencia: document.getElementById('f-referencia').checked,
+    refDetalle: document.getElementById('f-ref-detalle')?.value||'',
+    vaccines: document.getElementById('f-vaccines').value,
+    observaciones: document.getElementById('f-obs').value
+  };
+
+  DB.consultations[consultId] = consult;
+  saveDB();
+  // Auto-sync to Google Sheets if configured
+  syncConsultToSheets(consult, DB.patients[patientId]);
+  formPatientId = null;
+  vaccineState = {};
+  showView('history', patientId);
+}
+
+// ===========================
+// HISTORY VIEW
+// ===========================
+function renderHistory(){
+  if(!selectedPatientId || !DB.patients[selectedPatientId]){
+    // Show patient selector
+    return `<div class="card">
+      <div class="card-title">📂 Historial de Paciente</div>
+      <div class="alert alert-info">Selecciona un paciente desde la lista para ver su historial.</div>
+      <button class="btn btn-primary" onclick="showView('patients')">👥 Ir a Pacientes</button>
+    </div>`;
+  }
+  const p = DB.patients[selectedPatientId];
+  const consults = Object.values(DB.consultations)
+    .filter(c=>c.patientId===selectedPatientId)
+    .sort((a,b)=>b.fecha.localeCompare(a.fecha));
+
+  const a = calcAge(p.fechaNac);
+
+  return `
+  <div class="card">
+    <div class="card-title">
+      👤 ${p.nombre}
+      <div style="margin-left:auto;display:flex;gap:8px">
+        <button class="btn btn-primary btn-sm" onclick="newConsultForPatient('${p.id}')">+ Nueva Consulta</button>
+        <button class="btn btn-ghost btn-sm" onclick="showView('patients')">← Volver</button>
+      </div>
+    </div>
+    <div class="section-grid cols-4">
+      <div class="field"><label>N° HC</label><div style="font-weight:700;color:#1a56a0">${p.hc}</div></div>
+      <div class="field"><label>Fecha de nacimiento</label><div>${formatDate(p.fechaNac)}</div></div>
+      <div class="field"><label>Edad actual</label><div style="font-weight:700">${ageLabel(p.fechaNac)}</div></div>
+      <div class="field"><label>Sexo</label><div>${p.sexo==='M'?'Masculino':'Femenino'}</div></div>
+      <div class="field"><label>Tutor/Responsable</label><div>${p.tutor||'—'}</div></div>
+      <div class="field"><label>Teléfono</label><div>${p.telefono||'—'}</div></div>
+      <div class="field"><label>Dirección</label><div>${p.direccion||'—'}</div></div>
+      <div class="field"><label>Consultas registradas</label><div style="font-weight:700;color:#1a56a0">${consults.length}</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📋 Historial de Consultas</div>
+    ${consults.length===0 ? `<div class="empty-state"><div class="empty-icon">📋</div><p>No hay consultas registradas</p></div>` :
+    `<div class="consult-timeline">${consults.map(c=>renderConsultEntry(c, p)).join('')}</div>`}
+  </div>`;
+}
+
+function renderConsultEntry(c, p){
+  const cieText = c.cie && c.cie.length ? c.cie.map(d=>`${d.code} ${d.desc}`).join(', ') : 'Sin diagnóstico registrado';
+  const tratText = c.tratamiento && c.tratamiento.length ? c.tratamiento.map(t=>`${t.med} ${t.dosis} ${t.frec} x${t.dias}d`).join('; ') : '';
+  return `
+  <div class="consult-entry">
+    <div class="timeline-line">
+      <div class="timeline-dot"></div>
+      <div class="timeline-vline"></div>
+    </div>
+    <div class="consult-body">
+      <div class="consult-date">📅 ${formatDate(c.fecha)} ${c.estab?'— '+c.estab:''} ${c.medico?'— '+c.medico:''}</div>
+      <div class="consult-diag">${cieText.length>80?cieText.substring(0,80)+'...':cieText}</div>
+      <div class="consult-summary">
+        <strong>Motivo:</strong> ${c.motivo||'—'}<br>
+        ${c.peso?`<strong>Peso:</strong> ${c.peso} kg | `:''}${c.talla?`<strong>Talla:</strong> ${c.talla} cm | `:''}${c.fc?`<strong>FC:</strong> ${c.fc} lpm | `:''}${c.temp?`<strong>T°:</strong> ${c.temp}°C`:''}
+        ${tratText?`<br><strong>Tto:</strong> ${tratText.length>100?tratText.substring(0,100)+'...':tratText}`:''}
+        ${c.proxCita?`<br><strong>Próxima cita:</strong> ${formatDate(c.proxCita)}`:''}
+      </div>
+      <div class="consult-actions">
+        <button class="btn btn-outline btn-sm" onclick="showFullConsult('${c.id}')">👁 Ver completo</button>
+        <button class="btn btn-ghost btn-sm" onclick="printConsult('${c.id}')">🖨️ Imprimir</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteConsult('${c.id}')">🗑️ Eliminar</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function deleteConsult(cid){
+  if(!confirm('¿Eliminar esta consulta? Esta acción no se puede deshacer.')) return;
+  delete DB.consultations[cid];
+  saveDB();
+  showView('history');
+}
+
+// ===========================
+// FULL CONSULT MODAL
+// ===========================
+function showFullConsult(cid){
+  const c = DB.consultations[cid];
+  const p = c ? DB.patients[c.patientId] : null;
+  if(!c || !p){ alert('Consulta no encontrada.'); return; }
+  const a = calcAge(p.fechaNac);
+  const ranges = a ? vitalRanges(a.totalMonths) : null;
+
+  const cieHtml = c.cie && c.cie.length ? c.cie.map(d=>`<span class="cie-tag"><strong>${d.code}</strong> ${d.desc}</span>`).join('') : '—';
+  const tratHtml = c.tratamiento && c.tratamiento.length ? `<table style="width:100%;border-collapse:collapse;font-size:13px">
+    <thead><tr style="background:#ebf4ff">
+      <th style="padding:6px 8px;text-align:left;border-bottom:1px solid #bee3f8">Medicamento</th>
+      <th style="padding:6px 8px;border-bottom:1px solid #bee3f8">Dosis</th>
+      <th style="padding:6px 8px;border-bottom:1px solid #bee3f8">Frecuencia</th>
+      <th style="padding:6px 8px;border-bottom:1px solid #bee3f8">Días</th>
+    </tr></thead>
+    <tbody>${c.tratamiento.map((t,i)=>`<tr style="background:${i%2?'#f7fafc':'#fff'}">
+      <td style="padding:6px 8px;border-bottom:1px solid #e2e8f0">${t.med}</td>
+      <td style="padding:6px 8px;border-bottom:1px solid #e2e8f0;text-align:center">${t.dosis}</td>
+      <td style="padding:6px 8px;border-bottom:1px solid #e2e8f0;text-align:center">${t.frec}</td>
+      <td style="padding:6px 8px;border-bottom:1px solid #e2e8f0;text-align:center">${t.dias}</td>
+    </tr>`).join('')}</tbody>
+  </table>` : '—';
+
+  document.getElementById('modal-title').textContent = `HC — ${p.nombre} — ${formatDate(c.fecha)}`;
+  document.getElementById('modal-body').innerHTML = `
+    <div style="font-size:13px;line-height:1.7">
+      <p><strong>N° HC:</strong> ${c.hc} &bull; <strong>Fecha:</strong> ${formatDate(c.fecha)} &bull; <strong>Establecimiento:</strong> ${c.estab||'—'} &bull; <strong>Médico:</strong> ${c.medico||'—'}</p>
+      <hr>
+      <p><strong>Paciente:</strong> ${p.nombre} &bull; <strong>FN:</strong> ${formatDate(p.fechaNac)} &bull; <strong>Edad:</strong> ${ageLabel(p.fechaNac)} &bull; <strong>Sexo:</strong> ${p.sexo==='M'?'M':'F'}</p>
+      <p><strong>Tutor:</strong> ${p.tutor||'—'} &bull; <strong>Tel:</strong> ${p.telefono||'—'}</p>
+      <hr>
+      <p><strong>Peso:</strong> ${c.peso||'—'} kg &bull; <strong>Talla:</strong> ${c.talla||'—'} cm ${c.pc?`&bull; <strong>PC:</strong> ${c.pc} cm`:''}</p>
+      <p><strong>FC:</strong> ${c.fc||'—'} lpm &bull; <strong>FR:</strong> ${c.fr||'—'} rpm &bull; <strong>T°:</strong> ${c.temp||'—'}°C &bull; <strong>SpO₂:</strong> ${c.sato2||'—'}% ${c.pa?`&bull; <strong>PA:</strong> ${c.pa}`:''}</p>
+      ${ranges?`<p class="text-sm" style="color:#718096">Rangos normales para edad: FC ${ranges.fc} &bull; FR ${ranges.fr} &bull; T° ${ranges.temp} &bull; SpO₂ ${ranges.sato2}%</p>`:''}
+      <hr>
+      <p><strong>Motivo:</strong> ${c.motivo||'—'} &bull; <strong>Tiempo:</strong> ${c.tiempo||'—'}</p>
+      <p><strong>Anamnesis:</strong> ${c.anamnesis||'—'}</p>
+      ${c.antPat||c.antPeri?`<p><strong>Antecedentes:</strong> Perinatales: ${c.antPeri||'—'} | Patológicos: ${c.antPat||'—'}</p>`:''}
+      <hr>
+      <p><strong>Examen físico:</strong> ${c.exfis||'—'}</p>
+      <hr>
+      <p><strong>Diagnóstico (${c.cieTipo||'definitivo'}):</strong></p>
+      <div class="cie-selected" style="margin-bottom:8px">${cieHtml}</div>
+      <hr>
+      <p><strong>Tratamiento:</strong></p>
+      ${tratHtml}
+      ${c.indicaciones?`<p><strong>Indicaciones generales:</strong> ${c.indicaciones}</p>`:''}
+      ${c.examenes?`<p><strong>Exámenes solicitados:</strong> ${c.examenes}</p>`:''}
+      ${c.resultados?`<p><strong>Resultados:</strong> ${c.resultados}</p>`:''}
+      ${c.interconsulta?`<p><strong>Interconsulta:</strong> ${c.interconsulta}</p>`:''}
+      ${c.referencia?`<p><strong>REFERENCIA:</strong> ${c.refDetalle||'Sí'}</p>`:''}
+      ${c.proxCita?`<p><strong>Próxima cita:</strong> ${formatDate(c.proxCita)}</p>`:''}
+      ${c.observaciones?`<p><strong>Observaciones:</strong> ${c.observaciones}</p>`:''}
+    </div>`;
+  document.getElementById('modal-overlay').style.display='flex';
+
+  // Add print button to modal
+  const modalActions = document.querySelector('.modal-actions');
+  if(modalActions && !modalActions.querySelector('.print-from-modal')){
+    const printBtn = document.createElement('button');
+    printBtn.className = 'btn btn-outline print-from-modal';
+    printBtn.textContent = '🖨️ Imprimir';
+    printBtn.onclick = ()=>{ closeModalForce(); printConsult(cid); };
+    modalActions.insertBefore(printBtn, modalActions.firstChild);
+  }
+}
+
+function closeModal(e){
+  if(e.target===document.getElementById('modal-overlay')) closeModalForce();
+}
+function closeModalForce(){
+  document.getElementById('modal-overlay').style.display='none';
+}
+
+// ===========================
+// PRINT
+// ===========================
+function printConsult(cid){
+  const c = DB.consultations[cid];
+  const p = c ? DB.patients[c.patientId] : null;
+  if(!c || !p){ alert('Consulta no encontrada.'); return; }
+
+  const printWindow = window.open('','_blank','width=900,height=700');
+  const tratRows = c.tratamiento && c.tratamiento.length ?
+    c.tratamiento.map((t,i)=>`<tr><td style="padding:4px 8px;border:1px solid #ccc">${i+1}</td><td style="padding:4px 8px;border:1px solid #ccc">${t.med}</td><td style="padding:4px 8px;border:1px solid #ccc">${t.dosis}</td><td style="padding:4px 8px;border:1px solid #ccc">${t.frec}</td><td style="padding:4px 8px;border:1px solid #ccc">${t.dias}</td></tr>`).join('') : '<tr><td colspan="5" style="padding:4px 8px;border:1px solid #ccc;text-align:center">Sin medicamentos registrados</td></tr>';
+
+  const cieText = c.cie && c.cie.length ? c.cie.map(d=>`${d.code} — ${d.desc}`).join('<br>') : '—';
+
+  printWindow.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>HC ${p.hc} — ${p.nombre}</title>
+  <style>
+    body{font-family:Arial,sans-serif;font-size:12px;color:#000;margin:0;padding:20px}
+    h1{text-align:center;font-size:16px;margin:0}
+    h2{font-size:13px;background:#eee;padding:4px 8px;margin:12px 0 6px}
+    .header{border:2px solid #000;padding:10px;margin-bottom:10px}
+    .row{display:flex;gap:20px;margin-bottom:6px}
+    .row .label{font-weight:bold;min-width:130px}
+    table{width:100%;border-collapse:collapse;margin-bottom:8px}
+    th{background:#ddd;padding:4px 8px;border:1px solid #ccc;text-align:left}
+    td{padding:4px 8px;border:1px solid #ccc}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .vitals-box{border:1px solid #ccc;padding:6px;text-align:center}
+    .vitals-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:8px}
+    .sign-box{margin-top:40px;border-top:1px solid #000;width:200px;text-align:center;padding-top:4px}
+    .footer{margin-top:20px;font-size:10px;color:#666;text-align:center;border-top:1px solid #ccc;padding-top:8px}
+    @media print{body{padding:10px}}
+  </style></head><body>
+  <div class="header">
+    <h1>HISTORIA CLÍNICA PEDIÁTRICA</h1>
+    <p style="text-align:center;margin:4px 0;font-size:11px">Consultorio Particular</p>
+    <div class="row" style="margin-top:8px">
+      <div><span class="label">N° HC:</span> <strong>${c.hc}</strong></div>
+      <div><span class="label">Fecha:</span> ${formatDate(c.fecha)}</div>
+      <div><span class="label">Establecimiento:</span> ${c.estab||'____________'}</div>
+    </div>
+    <div class="row">
+      <div><span class="label">Médico:</span> ${c.medico||'____________'}</div>
+    </div>
+  </div>
+
+  <h2>I. DATOS DE FILIACIÓN</h2>
+  <div class="grid-2">
+    <div><div class="row"><span class="label">Nombre:</span> ${p.nombre}</div>
+    <div class="row"><span class="label">Fecha Nac.:</span> ${formatDate(p.fechaNac)}</div>
+    <div class="row"><span class="label">Edad:</span> ${ageLabel(p.fechaNac)}</div>
+    <div class="row"><span class="label">Sexo:</span> ${p.sexo==='M'?'Masculino':'Femenino'}</div></div>
+    <div><div class="row"><span class="label">Tutor/Padre:</span> ${p.tutor||'—'}</div>
+    <div class="row"><span class="label">Teléfono:</span> ${p.telefono||'—'}</div>
+    <div class="row"><span class="label">Dirección:</span> ${p.direccion||'—'}</div></div>
+  </div>
+
+  <h2>II. ANTROPOMETRÍA Y FUNCIONES VITALES</h2>
+  <div class="vitals-grid">
+    <div class="vitals-box"><strong>Peso</strong><br>${c.peso||'___'} kg</div>
+    <div class="vitals-box"><strong>Talla</strong><br>${c.talla||'___'} cm</div>
+    <div class="vitals-box"><strong>FC</strong><br>${c.fc||'___'} lpm</div>
+    <div class="vitals-box"><strong>FR</strong><br>${c.fr||'___'} rpm</div>
+    <div class="vitals-box"><strong>T°</strong><br>${c.temp||'___'} °C</div>
+    <div class="vitals-box"><strong>SpO₂</strong><br>${c.sato2||'___'} %</div>
+    ${c.pc?`<div class="vitals-box"><strong>PC</strong><br>${c.pc} cm</div>`:''}
+    ${c.pa?`<div class="vitals-box"><strong>PA</strong><br>${c.pa}</div>`:''}
+  </div>
+
+  <h2>III. MOTIVO DE CONSULTA</h2>
+  <p><strong>Motivo:</strong> ${c.motivo||'—'} &nbsp;&nbsp; <strong>Tiempo de enfermedad:</strong> ${c.tiempo||'—'}</p>
+
+  <h2>IV. ANAMNESIS</h2>
+  <p>${c.anamnesis||'—'}</p>
+
+  ${c.antPeri||c.antPat||c.antDpm||c.antFam?`
+  <h2>V. ANTECEDENTES</h2>
+  <p><strong>Perinatales:</strong> ${c.antPeri||'—'}</p>
+  <p><strong>Patológicos:</strong> ${c.antPat||'—'}</p>
+  ${c.antDpm?`<p><strong>Desarrollo Psicomotor:</strong> ${c.antDpm}</p>`:''}
+  ${c.antFam?`<p><strong>Familiares:</strong> ${c.antFam}</p>`:''}
+  ${c.antAlim?`<p><strong>Alimentarios:</strong> ${c.antAlim}</p>`:''}
+  `:''}
+
+  <h2>VI. EXAMEN FÍSICO</h2>
+  <p>${c.exfis||'—'}</p>
+
+  <h2>VII. DIAGNÓSTICO (${(c.cieTipo||'DEFINITIVO').toUpperCase()})</h2>
+  <p>${cieText}</p>
+
+  <h2>VIII. TRATAMIENTO</h2>
+  <table>
+    <thead><tr><th>#</th><th>Medicamento</th><th>Dosis</th><th>Frecuencia</th><th>Días</th></tr></thead>
+    <tbody>${tratRows}</tbody>
+  </table>
+  ${c.indicaciones?`<p><strong>Indicaciones generales:</strong> ${c.indicaciones}</p>`:''}
+
+  ${c.examenes?`<h2>IX. EXÁMENES AUXILIARES</h2><p>${c.examenes}</p>`:''}
+  ${c.resultados?`<p><strong>Resultados:</strong> ${c.resultados}</p>`:''}
+  ${c.interconsulta?`<h2>X. INTERCONSULTA</h2><p>${c.interconsulta}</p>`:''}
+  ${c.referencia?`<h2>XI. REFERENCIA</h2><p>${c.refDetalle||'Sí — ver detalle'}</p>`:''}
+  ${c.proxCita?`<h2>PRÓXIMA CITA</h2><p>${formatDate(c.proxCita)}</p>`:''}
+  ${c.observaciones?`<h2>OBSERVACIONES</h2><p>${c.observaciones}</p>`:''}
+
+  <div style="margin-top:30px;display:flex;justify-content:flex-end">
+    <div class="sign-box">
+      ${c.medico||'Médico tratante'}<br>
+      <small>Firma y sello</small>
+    </div>
+  </div>
+
+  <div class="footer">Generado por HCE Pediátrica — Consultorio Particular — ${new Date().toLocaleDateString('es-PE')}</div>
+  </body></html>`);
+  printWindow.document.close();
+  printWindow.focus();
+  setTimeout(()=>printWindow.print(), 500);
+}
+
+function printForm(){
+  const nombre = document.getElementById('f-nombre')?.value;
+  if(!nombre){ alert('Completa al menos el nombre del paciente antes de imprimir.'); return; }
+  window.print();
+}
+
+// ===========================
+// EVENT LISTENERS
+// ===========================
+function attachEventListeners(){
+  // Age update on load if editing
+  if(currentView==='new-consult'){
+    setTimeout(()=>{
+      updateAge();
+      checkVitals();
+    },100);
+  }
+}
+
+// ===========================
+// SEARCH VIEW
+// ===========================
+function renderSearch(){
+  return `
+  <div class="card">
+    <div class="card-title">🔍 Buscar Consultas Anteriores</div>
+    <div class="section-grid cols-2" style="margin-bottom:14px">
+      <div class="field">
+        <label>Buscar por nombre, N° HC o diagnóstico</label>
+        <input type="text" id="search-q" placeholder="Ej: Juan Pérez, HC-000001, J06.9..." oninput="runSearch()" style="border:1px solid #cbd5e0;border-radius:6px;padding:8px 10px">
+      </div>
+      <div class="field">
+        <label>Filtrar por fecha</label>
+        <input type="date" id="search-date" oninput="runSearch()" style="border:1px solid #cbd5e0;border-radius:6px;padding:8px 10px">
+      </div>
+    </div>
+    <div id="search-results">
+      <div class="empty-state">
+        <div class="empty-icon">🔍</div>
+        <p>Escribe para buscar entre todas las consultas</p>
+        <p class="hint">Puedes buscar por nombre, HC, diagnóstico CIE-10 o motivo</p>
+      </div>
+    </div>
+  </div>`;
+}
+
+function runSearch(){
+  const q = (document.getElementById('search-q')?.value||'').toLowerCase().trim();
+  const dateFilter = document.getElementById('search-date')?.value||'';
+  const container = document.getElementById('search-results');
+  if(!container) return;
+
+  if(!q && !dateFilter){
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><p>Escribe para buscar entre todas las consultas</p></div>`;
+    return;
+  }
+
+  const allConsults = Object.values(DB.consultations);
+  const results = allConsults.filter(c => {
+    const p = DB.patients[c.patientId];
+    if(!p) return false;
+    const cieText = c.cie ? c.cie.map(d=>d.code+' '+d.desc).join(' ').toLowerCase() : '';
+    const matchQ = !q || (
+      p.nombre.toLowerCase().includes(q) ||
+      (p.hc||'').toLowerCase().includes(q) ||
+      (c.motivo||'').toLowerCase().includes(q) ||
+      cieText.includes(q) ||
+      (c.anamnesis||'').toLowerCase().includes(q)
+    );
+    const matchDate = !dateFilter || c.fecha === dateFilter;
+    return matchQ && matchDate;
+  }).sort((a,b)=>b.fecha.localeCompare(a.fecha));
+
+  if(!results.length){
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><p>No se encontraron consultas</p><p class="hint">Prueba con otros términos de búsqueda</p></div>`;
+    return;
+  }
+
+  container.innerHTML = `
+    <div style="font-size:12px;color:#718096;margin-bottom:10px">${results.length} resultado(s) encontrado(s)</div>
+    <div class="patient-list">
+    ${results.map(c => {
+      const p = DB.patients[c.patientId];
+      const cieLabel = c.cie && c.cie.length ? c.cie.map(d=>d.code).join(', ') : '—';
+      return `<div class="patient-card" onclick="showView('history','${p.id}')">
+        <div>
+          <div class="patient-name">${p.nombre}</div>
+          <div class="patient-info">${p.hc} &bull; ${formatDate(c.fecha)}</div>
+          <div class="patient-info"><strong>Motivo:</strong> ${c.motivo||'—'}</div>
+          <div class="patient-info"><strong>Dx:</strong> ${cieLabel}</div>
+        </div>
+        <div class="patient-meta">
+          <button class="btn btn-outline btn-sm" onclick="event.stopPropagation();printConsult('${c.id}')">🖨️ Imprimir</button>
+        </div>
+      </div>`;
+    }).join('')}
+    </div>`;
+}
+
+// ===========================
+// INIT
+// ===========================
+function init(){
+  loadDB();
+  // Init sync status
+  if(getGSUrl()) setSyncStatus('☁️ Drive conectado');
+  // Set today's date
+  const dateEl = document.getElementById('current-date-display');
+  if(dateEl) dateEl.textContent = new Date().toLocaleDateString('es-PE', {weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  showView('patients');
+}
+
+init();
+</script>
+</body>
+</html>
