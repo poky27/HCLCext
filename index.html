@@ -211,9 +211,80 @@ input,textarea,select,button{font-family:inherit;font-size:14px}
 .mt-8{margin-top:8px}
 .mt-12{margin-top:12px}
 hr{border:none;border-top:1px solid #e2e8f0;margin:16px 0}
+
+/* ===== ANTECEDENTES PREFILLED ===== */
+.ant-prefilled-badge{display:inline-flex;align-items:center;gap:6px;background:#fffff0;border:1px solid #fbd38d;color:#744210;border-radius:6px;padding:5px 10px;font-size:12px;font-weight:600;margin-bottom:10px}
+.ant-prefilled-badge .pencil{font-size:13px}
+.ant-editable-field textarea{border-left:3px solid #fbd38d !important;background:#fffff0 !important}
+.ant-editable-field textarea:focus{border-color:#1a56a0 !important;background:#fff !important}
+
+/* ===== RECETA PRINT ===== */
+.receta-print-btn{display:inline-flex;align-items:center;gap:6px;background:#f0fff4;border:1.5px solid #9ae6b4;color:#276749;border-radius:7px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.15s;margin-left:auto}
+.receta-print-btn:hover{background:#c6f6d5}
+@media print{
+  .no-print-receta{display:none!important}
+}
+
+/* ===== LOGIN ===== */
+#login-screen{position:fixed;inset:0;background:linear-gradient(135deg,#1a3a6b 0%,#1a56a0 60%,#2b6cb0 100%);z-index:9999;display:flex;align-items:center;justify-content:center}
+#login-screen.hidden{display:none}
+.login-box{background:#fff;border-radius:16px;padding:40px 36px;width:100%;max-width:380px;box-shadow:0 24px 64px rgba(0,0,0,0.35);text-align:center}
+.login-logo{font-size:40px;margin-bottom:8px}
+.login-title{font-size:20px;font-weight:800;color:#1a56a0;margin-bottom:4px}
+.login-subtitle{font-size:12px;color:#718096;margin-bottom:28px}
+.login-field{text-align:left;margin-bottom:16px}
+.login-field label{font-size:12px;font-weight:700;color:#4a5568;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:5px}
+.login-field input{width:100%;border:1.5px solid #cbd5e0;border-radius:8px;padding:10px 12px;font-size:14px;transition:border-color 0.15s}
+.login-field input:focus{outline:none;border-color:#1a56a0;box-shadow:0 0 0 3px rgba(26,86,160,0.12)}
+.login-btn{width:100%;background:#1a56a0;color:#fff;border:none;border-radius:8px;padding:12px;font-size:15px;font-weight:700;cursor:pointer;transition:background 0.15s;margin-top:4px}
+.login-btn:hover{background:#154683}
+.login-error{background:#fff5f5;color:#c53030;border:1px solid #feb2b2;border-radius:7px;padding:8px 12px;font-size:13px;margin-top:12px;display:none}
+.login-footer{margin-top:20px;font-size:11px;color:#a0aec0}
+.change-pwd-link{color:#1a56a0;cursor:pointer;text-decoration:underline;font-size:12px;margin-top:12px;display:inline-block}
+/* change password modal */
+#change-pwd-modal{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:10000;display:none;align-items:center;justify-content:center}
+#change-pwd-modal.open{display:flex}
+.change-pwd-box{background:#fff;border-radius:12px;padding:28px;width:100%;max-width:340px;box-shadow:0 12px 40px rgba(0,0,0,0.25)}
 </style>
 </head>
 <body>
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">🏥</div>
+    <div class="login-title">HCE Pediátrica</div>
+    <div class="login-subtitle">Historia Clínica Electrónica — Consultorio Particular</div>
+    <div class="login-field">
+      <label>Usuario</label>
+      <input type="text" id="login-user" placeholder="Ingresa tu usuario" autocomplete="username" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="login-field">
+      <label>Contraseña</label>
+      <input type="password" id="login-pass" placeholder="Ingresa tu contraseña" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="login-btn" onclick="doLogin()">Ingresar</button>
+    <div class="login-error" id="login-error">Usuario o contraseña incorrectos.</div>
+    <div class="login-footer">Sistema privado — solo personal autorizado</div>
+    <span class="change-pwd-link" onclick="openChangePwd()">🔑 Cambiar contraseña</span>
+  </div>
+</div>
+
+<!-- CHANGE PASSWORD MODAL -->
+<div id="change-pwd-modal">
+  <div class="change-pwd-box">
+    <div style="font-size:16px;font-weight:700;color:#1a56a0;margin-bottom:16px">🔑 Cambiar contraseña</div>
+    <div class="login-field"><label>Usuario actual</label><input type="text" id="cp-user" placeholder="Usuario"></div>
+    <div class="login-field"><label>Contraseña actual</label><input type="password" id="cp-old" placeholder="Contraseña actual"></div>
+    <div class="login-field"><label>Nueva contraseña</label><input type="password" id="cp-new" placeholder="Nueva contraseña (mín. 6 caracteres)"></div>
+    <div class="login-field"><label>Confirmar nueva contraseña</label><input type="password" id="cp-confirm" placeholder="Repite la nueva contraseña"></div>
+    <div id="cp-msg" style="font-size:12px;margin-bottom:10px"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-ghost btn-sm" onclick="closeChangePwd()">Cancelar</button>
+      <button class="btn btn-primary btn-sm" onclick="saveNewPassword()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <div id="app">
   <!-- SIDEBAR -->
   <nav id="sidebar">
@@ -1060,8 +1131,23 @@ function renderNewConsult(){
   const hc = formPatientId ? DB.patients[formPatientId].hc : genHCPreview();
   const p = formPatientId ? DB.patients[formPatientId] : null;
 
+  // Get last consultation for this patient (for antecedentes prefill)
+  let lastConsult = null;
+  if(formPatientId){
+    const patConsults = Object.values(DB.consultations)
+      .filter(c=>c.patientId===formPatientId)
+      .sort((a,b)=>b.fecha.localeCompare(a.fecha));
+    if(patConsults.length) lastConsult = patConsults[0];
+  }
+  const ant = lastConsult || {};
+  const hasAnt = !!(ant.antPeri||ant.antPat||ant.antDpm||ant.antFam||ant.antAlim);
+
   treatmentRows = [{med:'',dosis:'',frec:'',dias:''}];
   selectedCIE = [];
+
+  // Saved estab & medico
+  const savedEstab = localStorage.getItem('hce-estab')||'BiosScience-Ped';
+  const savedMedico = localStorage.getItem('hce-doctor')||'';
 
   return `
   <div class="print-header" style="display:none">
@@ -1086,11 +1172,11 @@ function renderNewConsult(){
       </div>
       <div class="field">
         <label>Establecimiento</label>
-        <input type="text" id="f-estab" placeholder="Centro de Salud / Hospital" value="">
+        <input type="text" id="f-estab" placeholder="Centro de Salud / Hospital" value="${savedEstab}" oninput="localStorage.setItem('hce-estab',this.value)">
       </div>
       <div class="field">
         <label>Médico</label>
-        <input type="text" id="f-medico" placeholder="Dr./Dra." value="">
+        <input type="text" id="f-medico" placeholder="Dr./Dra." value="${savedMedico}" oninput="localStorage.setItem('hce-doctor',this.value)">
       </div>
     </div>
   </div>
@@ -1202,32 +1288,35 @@ function renderNewConsult(){
   <!-- ANTECEDENTES (COLLAPSIBLE) -->
   <div class="card">
     <div class="collapsible-header" onclick="toggleCollapsible('antecedentes')">
-      <div class="card-title" style="border:none;margin:0;padding:0">📁 Antecedentes</div>
-      <span class="chevron" id="chevron-antecedentes">▼</span>
+      <div class="card-title" style="border:none;margin:0;padding:0">📁 Antecedentes
+        ${hasAnt ? `<span style="font-size:11px;font-weight:600;background:#fffff0;border:1px solid #fbd38d;color:#744210;border-radius:5px;padding:2px 8px;margin-left:8px">✏️ Pre-completado</span>` : ''}
+      </div>
+      <span class="chevron ${hasAnt?'open':''}" id="chevron-antecedentes">▼</span>
     </div>
-    <div class="collapsible-content closed" id="col-antecedentes">
+    <div class="collapsible-content ${hasAnt?'open':'closed'}" id="col-antecedentes">
       <div style="padding-top:14px">
+        ${hasAnt ? `<div class="ant-prefilled-badge"><span class="pencil">✏️</span> Datos de la última consulta (${formatDate(ant.fecha)}) — puedes editar libremente</div>` : ''}
         <div class="section-grid cols-2">
-          <div class="field">
+          <div class="field ${hasAnt&&ant.antPeri?'ant-editable-field':''}">
             <label>Antecedentes perinatales</label>
-            <textarea id="f-ant-peri" rows="3" placeholder="Edad gestacional, tipo de parto, APGAR, complicaciones al nacer..."></textarea>
+            <textarea id="f-ant-peri" rows="3" placeholder="Edad gestacional, tipo de parto, APGAR, complicaciones al nacer...">${ant.antPeri||''}</textarea>
           </div>
-          <div class="field">
+          <div class="field ${hasAnt&&ant.antPat?'ant-editable-field':''}">
             <label>Antecedentes patológicos</label>
-            <textarea id="f-ant-pat" rows="3" placeholder="Enfermedades previas, hospitalizaciones, cirugías, alergias..."></textarea>
+            <textarea id="f-ant-pat" rows="3" placeholder="Enfermedades previas, hospitalizaciones, cirugías, alergias...">${ant.antPat||''}</textarea>
           </div>
-          <div class="field">
+          <div class="field ${hasAnt&&ant.antDpm?'ant-editable-field':''}">
             <label>Desarrollo psicomotor</label>
-            <textarea id="f-ant-dpm" rows="2" placeholder="Sonrisa social, sostén cefálico, sedestación, marcha, lenguaje..."></textarea>
+            <textarea id="f-ant-dpm" rows="2" placeholder="Sonrisa social, sostén cefálico, sedestación, marcha, lenguaje...">${ant.antDpm||''}</textarea>
           </div>
-          <div class="field">
+          <div class="field ${hasAnt&&ant.antFam?'ant-editable-field':''}">
             <label>Antecedentes familiares</label>
-            <textarea id="f-ant-fam" rows="2" placeholder="Enfermedades heredofamiliares relevantes..."></textarea>
+            <textarea id="f-ant-fam" rows="2" placeholder="Enfermedades heredofamiliares relevantes...">${ant.antFam||''}</textarea>
           </div>
         </div>
-        <div class="field field-full" style="margin-top:10px">
+        <div class="field field-full ${hasAnt&&ant.antAlim?'ant-editable-field':''}" style="margin-top:10px">
           <label>Antecedentes alimentarios / Lactancia</label>
-          <textarea id="f-ant-alim" rows="2" placeholder="Lactancia materna, inicio de alimentación complementaria, dieta actual..."></textarea>
+          <textarea id="f-ant-alim" rows="2" placeholder="Lactancia materna, inicio de alimentación complementaria, dieta actual...">${ant.antAlim||''}</textarea>
         </div>
       </div>
     </div>
@@ -1308,11 +1397,13 @@ function renderNewConsult(){
 
   <!-- TRATAMIENTO -->
   <div class="card">
-    <div class="card-title">💊 Tratamiento / Receta</div>
+    <div class="card-title">💊 Tratamiento / Receta
+      <button type="button" class="receta-print-btn no-print" onclick="printReceta()">🖨️ Imprimir Receta</button>
+    </div>
     <div class="treatment-rows" id="treatment-rows">
       ${renderTreatmentRows()}
     </div>
-    <button type="button" class="btn btn-ghost btn-sm" onclick="addTreatmentRow()">+ Agregar medicamento</button>
+    <button type="button" class="btn btn-ghost btn-sm no-print" onclick="addTreatmentRow()">+ Agregar medicamento</button>
     <div class="field field-full" style="margin-top:14px">
       <label>Indicaciones generales</label>
       <textarea id="f-indicaciones" rows="2" placeholder="Medidas generales, indicaciones de enfermería, dieta, reposo..."></textarea>
@@ -1321,7 +1412,9 @@ function renderNewConsult(){
 
   <!-- EXAMENES AUX -->
   <div class="card">
-    <div class="card-title">🧪 Exámenes Auxiliares</div>
+    <div class="card-title">🧪 Exámenes Auxiliares
+      <button type="button" class="receta-print-btn no-print" onclick="printExamenes()">🖨️ Imprimir Solicitud</button>
+    </div>
     <div class="section-grid cols-2">
       <div class="field">
         <label>Exámenes solicitados</label>
@@ -1437,7 +1530,8 @@ function updateGrowth(){
 
   if(!dob || !sexo || !container) return;
 
-  const {months: monthAge} = calcAge(dob);
+  const ageCalc = calcAge(dob);
+  const monthAge = ageCalc ? ageCalc.totalMonths : 0;
   const isMale = sexo === 'M';
   const peso = parseFloat(pesoEl?.value) || null;
   const talla = parseFloat(tallaEl?.value) || null;
@@ -2070,6 +2164,141 @@ function printConsult(cid){
   setTimeout(()=>printWindow.print(), 500);
 }
 
+function buildRecetaHeader(){
+  const nombre = document.getElementById('f-nombre')?.value||'';
+  const dob = document.getElementById('f-dob')?.value||'';
+  const hc = document.getElementById('f-hc')?.value||'';
+  const fecha = document.getElementById('f-fecha')?.value||today();
+  const medico = document.getElementById('f-medico')?.value||localStorage.getItem('hce-doctor')||'';
+  const estab = document.getElementById('f-estab')?.value||localStorage.getItem('hce-estab')||'BiosScience-Ped';
+  const sexoEl = document.getElementById('f-sexo');
+  const sexo = sexoEl ? (sexoEl.value==='M'?'Masculino':'Femenino') : '';
+  const age = dob ? ageLabel(dob) : '';
+  return {nombre, dob, hc, fecha, medico, estab, sexo, age};
+}
+
+function recetaBaseStyle(){
+  return `<style>
+    body{font-family:Arial,sans-serif;font-size:12px;color:#000;margin:0;padding:20px;max-width:700px}
+    .header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #1a56a0;padding-bottom:10px;margin-bottom:14px}
+    .clinic-name{font-size:18px;font-weight:800;color:#1a56a0}
+    .clinic-sub{font-size:11px;color:#555;margin-top:2px}
+    .patient-row{background:#f0f4f8;border-radius:6px;padding:8px 12px;margin-bottom:14px;display:flex;gap:20px;flex-wrap:wrap;font-size:12px}
+    .patient-row span{display:inline-block}
+    .patient-row strong{color:#1a56a0}
+    h2{font-size:13px;font-weight:800;color:#1a56a0;border-bottom:1px solid #bee3f8;padding-bottom:4px;margin:14px 0 8px}
+    table{width:100%;border-collapse:collapse;margin-bottom:10px}
+    th{background:#1a56a0;color:#fff;padding:6px 8px;text-align:left;font-size:11px}
+    td{padding:6px 8px;border-bottom:1px solid #e2e8f0;font-size:12px}
+    tr:nth-child(even) td{background:#f7fafc}
+    .indicaciones-box{background:#fffff0;border:1px solid #fbd38d;border-radius:6px;padding:10px;font-size:12px;margin-top:8px;white-space:pre-wrap}
+    .firma-section{margin-top:50px;display:flex;justify-content:flex-end}
+    .firma-box{text-align:center;width:220px;border-top:2px solid #000;padding-top:6px;font-size:12px}
+    .firma-box .firma-name{font-weight:700;font-size:13px}
+    .fecha-emision{font-size:11px;color:#555;margin-top:4px}
+    @media print{body{padding:10px}}
+  </style>`;
+}
+
+function printReceta(){
+  const {nombre,hc,fecha,medico,estab,sexo,age} = buildRecetaHeader();
+  if(!nombre){ alert('Completa el nombre del paciente antes de imprimir.'); return; }
+
+  const tratRows = treatmentRows.filter(r=>r.med);
+  const indicaciones = document.getElementById('f-indicaciones')?.value||'';
+  const w = window.open('','_blank','width=750,height=650');
+
+  const tratTable = tratRows.length
+    ? `<table><thead><tr><th>#</th><th>Medicamento / Concentración</th><th>Dosis</th><th>Frecuencia</th><th>Días</th></tr></thead><tbody>${
+        tratRows.map((t,i)=>`<tr><td style="text-align:center">${i+1}</td><td><strong>${t.med}</strong></td><td>${t.dosis}</td><td>${t.frec}</td><td>${t.dias}</td></tr>`).join('')
+      }</tbody></table>`
+    : '<p style="color:#718096;font-style:italic">Sin medicamentos registrados.</p>';
+
+  const indHtml = indicaciones
+    ? `<h2>Indicaciones generales</h2><div class="indicaciones-box">${indicaciones.replace(/\n/g,'<br>')}</div>`
+    : '';
+
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Receta — ${nombre}</title>${recetaBaseStyle()}</head><body>
+  <div class="header">
+    <div>
+      <div class="clinic-name">🏥 ${estab}</div>
+      <div class="clinic-sub">Consultorio Pediátrico Particular</div>
+    </div>
+    <div style="text-align:right;font-size:11px;color:#555">
+      <div><strong>RECETA MÉDICA</strong></div>
+      <div>Fecha: ${formatDate(fecha)}</div>
+      <div>N° HC: ${hc}</div>
+    </div>
+  </div>
+  <div class="patient-row">
+    <span><strong>Paciente:</strong> ${nombre}</span>
+    <span><strong>Edad:</strong> ${age}</span>
+    <span><strong>Sexo:</strong> ${sexo}</span>
+  </div>
+  <h2>💊 Medicamentos prescritos</h2>
+  ${tratTable}
+  ${indHtml}
+  <div class="firma-section">
+    <div class="firma-box">
+      <div class="firma-name">${medico||'_______________________'}</div>
+      <div>Médico Pediatra</div>
+      <div class="fecha-emision">Fecha: ${formatDate(fecha)}</div>
+      <div style="margin-top:6px;font-size:10px;color:#555">Firma y Sello</div>
+    </div>
+  </div>
+  </body></html>`);
+  w.document.close();
+  w.focus();
+  setTimeout(()=>w.print(),400);
+}
+
+function printExamenes(){
+  const {nombre,hc,fecha,medico,estab,sexo,age} = buildRecetaHeader();
+  if(!nombre){ alert('Completa el nombre del paciente antes de imprimir.'); return; }
+
+  const examenes = document.getElementById('f-examenes')?.value||'';
+  const w = window.open('','_blank','width=750,height=550');
+
+  const examList = examenes
+    ? examenes.split('\n').filter(l=>l.trim()).map((l,i)=>`<tr><td style="text-align:center;width:30px">${i+1}</td><td>${l}</td><td style="width:90px;border:1px solid #000;height:20px"></td></tr>`).join('')
+    : '<tr><td colspan="3" style="font-style:italic;color:#718096">Sin exámenes registrados.</td></tr>';
+
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Solicitud Exámenes — ${nombre}</title>${recetaBaseStyle()}</head><body>
+  <div class="header">
+    <div>
+      <div class="clinic-name">🏥 ${estab}</div>
+      <div class="clinic-sub">Consultorio Pediátrico Particular</div>
+    </div>
+    <div style="text-align:right;font-size:11px;color:#555">
+      <div><strong>SOLICITUD DE EXÁMENES</strong></div>
+      <div>Fecha: ${formatDate(fecha)}</div>
+      <div>N° HC: ${hc}</div>
+    </div>
+  </div>
+  <div class="patient-row">
+    <span><strong>Paciente:</strong> ${nombre}</span>
+    <span><strong>Edad:</strong> ${age}</span>
+    <span><strong>Sexo:</strong> ${sexo}</span>
+  </div>
+  <h2>🧪 Exámenes auxiliares solicitados</h2>
+  <table>
+    <thead><tr><th>#</th><th>Examen</th><th>Resultado</th></tr></thead>
+    <tbody>${examList}</tbody>
+  </table>
+  <div class="firma-section">
+    <div class="firma-box">
+      <div class="firma-name">${medico||'_______________________'}</div>
+      <div>Médico Pediatra</div>
+      <div class="fecha-emision">Fecha: ${formatDate(fecha)}</div>
+      <div style="margin-top:6px;font-size:10px;color:#555">Firma y Sello</div>
+    </div>
+  </div>
+  </body></html>`);
+  w.document.close();
+  w.focus();
+  setTimeout(()=>w.print(),400);
+}
+
 function printForm(){
   const nombre = document.getElementById('f-nombre')?.value;
   if(!nombre){ alert('Completa al menos el nombre del paciente antes de imprimir.'); return; }
@@ -2170,9 +2399,94 @@ function runSearch(){
 }
 
 // ===========================
+// LOGIN SYSTEM
+// ===========================
+const DEFAULT_USER = 'admin';
+const DEFAULT_PASS = 'hce2026';
+
+function getCredentials(){
+  const stored = localStorage.getItem('hce-credentials');
+  if(stored){ try{ return JSON.parse(stored); }catch(e){} }
+  return {user: DEFAULT_USER, pass: DEFAULT_PASS};
+}
+
+function doLogin(){
+  const user = document.getElementById('login-user').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-error');
+  const creds = getCredentials();
+  if(user === creds.user && pass === creds.pass){
+    document.getElementById('login-screen').classList.add('hidden');
+    errEl.style.display = 'none';
+    // Store session flag (tab-level)
+    sessionStorage.setItem('hce-authed','1');
+  } else {
+    errEl.style.display = 'block';
+    document.getElementById('login-pass').value = '';
+    document.getElementById('login-pass').focus();
+  }
+}
+
+function openChangePwd(){
+  document.getElementById('change-pwd-modal').classList.add('open');
+  document.getElementById('cp-msg').textContent = '';
+}
+function closeChangePwd(){
+  document.getElementById('change-pwd-modal').classList.remove('open');
+  ['cp-user','cp-old','cp-new','cp-confirm'].forEach(id=>{
+    const el = document.getElementById(id); if(el) el.value='';
+  });
+}
+
+function saveNewPassword(){
+  const user = document.getElementById('cp-user').value.trim();
+  const oldPass = document.getElementById('cp-old').value;
+  const newPass = document.getElementById('cp-new').value;
+  const confirm = document.getElementById('cp-confirm').value;
+  const msgEl = document.getElementById('cp-msg');
+  const creds = getCredentials();
+
+  if(user !== creds.user || oldPass !== creds.pass){
+    msgEl.style.color='#c53030'; msgEl.textContent='❌ Usuario o contraseña actual incorrectos.'; return;
+  }
+  if(newPass.length < 6){
+    msgEl.style.color='#c53030'; msgEl.textContent='❌ La nueva contraseña debe tener al menos 6 caracteres.'; return;
+  }
+  if(newPass !== confirm){
+    msgEl.style.color='#c53030'; msgEl.textContent='❌ Las contraseñas no coinciden.'; return;
+  }
+  localStorage.setItem('hce-credentials', JSON.stringify({user, pass: newPass}));
+  msgEl.style.color='#276749'; msgEl.textContent='✅ Contraseña cambiada correctamente.';
+  setTimeout(closeChangePwd, 1500);
+}
+
+function addLogoutButton(){
+  const footer = document.querySelector('.sidebar-footer');
+  if(!footer) return;
+  const btn = document.createElement('button');
+  btn.className='nav-item';
+  btn.style='color:#fff;opacity:0.7;margin-top:6px;border-top:1px solid rgba(255,255,255,0.15);padding-top:10px';
+  btn.innerHTML='<span class="icon">🔒</span> Cerrar sesión';
+  btn.onclick = () => {
+    if(confirm('¿Cerrar sesión?')){
+      sessionStorage.removeItem('hce-authed');
+      location.reload();
+    }
+  };
+  footer.appendChild(btn);
+}
+
+// ===========================
 // INIT
 // ===========================
 function init(){
+  // Check session auth
+  if(!sessionStorage.getItem('hce-authed')){
+    document.getElementById('login-screen').classList.remove('hidden');
+    document.getElementById('login-user').focus();
+    return; // Don't load app until logged in
+  }
+  document.getElementById('login-screen').classList.add('hidden');
   loadDB();
   // Init sync status
   if(getGSUrl()) setSyncStatus('☁️ Drive conectado');
@@ -2180,6 +2494,7 @@ function init(){
   const dateEl = document.getElementById('current-date-display');
   if(dateEl) dateEl.textContent = new Date().toLocaleDateString('es-PE', {weekday:'long',year:'numeric',month:'long',day:'numeric'});
   showView('patients');
+  setTimeout(addLogoutButton, 200);
 }
 
 init();
