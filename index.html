@@ -212,6 +212,19 @@ input,textarea,select,button{font-family:inherit;font-size:14px}
 .mt-12{margin-top:12px}
 hr{border:none;border-top:1px solid #e2e8f0;margin:16px 0}
 
+/* ===== WATERLOW & EVIDENCIA NUTRICIONAL ===== */
+.evidence-badge{display:flex;align-items:center;gap:8px;background:#f0f4ff;border:1px solid #bee3f8;border-left:4px solid #1a56a0;border-radius:7px;padding:7px 12px;font-size:11px;color:#2d3748;margin-bottom:12px}
+.evidence-badge .ev-icon{font-size:14px}
+.evidence-badge strong{color:#1a56a0}
+.waterlow-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px}
+.waterlow-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.wl-global{grid-column:1/-1;border-radius:8px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between}
+.wl-global .gi-label{font-size:12px;font-weight:700;text-transform:uppercase;color:#4a5568}
+.wl-global .gi-value{font-size:16px;font-weight:800}
+.wl-alert{background:#fff5f5;color:#9b2c2c;border:1px solid #fc8181;border-radius:6px;padding:8px 12px;font-size:12px;font-weight:700;margin-top:8px}
+.gi-dual{background:#fff5f5}
+.growth-card-5col{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+
 /* ===== ANTECEDENTES PREFILLED ===== */
 .ant-prefilled-badge{display:inline-flex;align-items:center;gap:6px;background:#fffff0;border:1px solid #fbd38d;color:#744210;border-radius:6px;padding:5px 10px;font-size:12px;font-weight:600;margin-bottom:10px}
 .ant-prefilled-badge .pencil{font-size:13px}
@@ -933,6 +946,89 @@ const WHO_BMI_GIRLS = [
   {m:120,p3:13.5,p15:15.3,p50:17.5,p85:21.0,p97:25.4}
 ];
 
+// ===========================
+// WHO WEIGHT-FOR-HEIGHT P50 LOOKUP
+// Fuente: WHO Child Growth Standards 2006
+// Indexado por talla en cm → peso mediano (P50) en kg
+// Usado para calcular P/T% (Waterlow wasting)
+// Rango: 45–120 cm (cubre 0–5 años aprox.)
+// ===========================
+const WHO_WH_P50_BOYS = {
+  45:2.4,46:2.6,47:2.8,48:3.0,49:3.2,50:3.4,51:3.6,52:3.8,53:4.0,54:4.3,
+  55:4.5,56:4.7,57:5.0,58:5.2,59:5.5,60:5.7,61:6.0,62:6.3,63:6.5,64:6.8,
+  65:7.1,66:7.3,67:7.6,68:7.9,69:8.2,70:8.4,71:8.7,72:9.0,73:9.2,74:9.5,
+  75:9.7,76:10.0,77:10.2,78:10.4,79:10.7,80:10.9,81:11.2,82:11.4,83:11.7,
+  84:11.9,85:12.2,86:12.5,87:12.7,88:13.0,89:13.3,90:13.6,91:13.9,92:14.2,
+  93:14.5,94:14.8,95:15.1,96:15.4,97:15.7,98:16.0,99:16.4,100:16.7,
+  101:17.1,102:17.4,103:17.8,104:18.2,105:18.6,106:19.0,107:19.4,
+  108:19.8,109:20.3,110:20.7,111:21.2,112:21.7,113:22.2,114:22.7,
+  115:23.2,116:23.8,117:24.3,118:24.9,119:25.5,120:26.1
+};
+const WHO_WH_P50_GIRLS = {
+  45:2.5,46:2.6,47:2.8,48:3.0,49:3.2,50:3.4,51:3.5,52:3.7,53:4.0,54:4.2,
+  55:4.4,56:4.7,57:4.9,58:5.2,59:5.4,60:5.6,61:5.9,62:6.2,63:6.4,64:6.7,
+  65:7.0,66:7.2,67:7.5,68:7.8,69:8.1,70:8.4,71:8.6,72:8.9,73:9.2,74:9.5,
+  75:9.7,76:10.0,77:10.3,78:10.6,79:10.8,80:11.1,81:11.4,82:11.6,83:11.9,
+  84:12.2,85:12.5,86:12.8,87:13.1,88:13.4,89:13.7,90:14.0,91:14.3,92:14.6,
+  93:15.0,94:15.3,95:15.6,96:16.0,97:16.4,98:16.7,99:17.1,100:17.5,
+  101:17.9,102:18.3,103:18.7,104:19.2,105:19.6,106:20.1,107:20.5,
+  108:21.0,109:21.5,110:22.0,111:22.5,112:23.0,113:23.6,114:24.1,
+  115:24.7,116:25.3,117:25.9,118:26.5,119:27.1,120:27.8
+};
+
+function getMedianWeightForHeight(heightCm, isMale){
+  const table = isMale ? WHO_WH_P50_BOYS : WHO_WH_P50_GIRLS;
+  const h = Math.round(heightCm);
+  if(table[h]) return table[h];
+  const keys = Object.keys(table).map(Number).sort((a,b)=>a-b);
+  const lower = keys.filter(k=>k<=h).pop();
+  const upper = keys.find(k=>k>=h);
+  if(!lower) return table[keys[0]];
+  if(!upper) return table[keys[keys.length-1]];
+  if(lower===upper) return table[lower];
+  return table[lower] + (h-lower)/(upper-lower)*(table[upper]-table[lower]);
+}
+
+function getMedianHeightForAge(monthAge, isMale){
+  const haTable = isMale ? WHO_HA_BOYS : WHO_HA_GIRLS;
+  const ref = interpolateWHO(haTable, monthAge);
+  return ref ? ref.p50 : null;
+}
+
+// ===========================
+// WATERLOW CLASSIFICATION
+// Fuente: Waterlow JC. BMJ. 1972;3:566–569.
+// Validado por: WHO/UNICEF Anthropometric Indicators 2019
+// P/T% → wasting (desnutrición aguda)
+// T/E% → stunting (desnutrición crónica)
+// ===========================
+function waterlowClassify(ptPct, tePct){
+  let wasting, wastingCls, wastingSev;
+  if(ptPct===null){ wasting='Sin dato'; wastingCls='gi-unknown'; wastingSev=0; }
+  else if(ptPct<70){ wasting='Aguda severa (<70%)'; wastingCls='gi-low'; wastingSev=3; }
+  else if(ptPct<80){ wasting='Aguda moderada (70–80%)'; wastingCls='gi-low'; wastingSev=2; }
+  else if(ptPct<90){ wasting='Aguda leve (80–90%)'; wastingCls='gi-low'; wastingSev=1; }
+  else { wasting='Normal (≥90%)'; wastingCls='gi-normal'; wastingSev=0; }
+
+  let stunting, stuntingCls, stuntingSev;
+  if(tePct===null){ stunting='Sin dato'; stuntingCls='gi-unknown'; stuntingSev=0; }
+  else if(tePct<85){ stunting='Crónica severa (<85%)'; stuntingCls='gi-low'; stuntingSev=3; }
+  else if(tePct<90){ stunting='Crónica moderada (85–90%)'; stuntingCls='gi-low'; stuntingSev=2; }
+  else if(tePct<95){ stunting='Crónica leve (90–95%)'; stuntingCls='gi-low'; stuntingSev=1; }
+  else { stunting='Normal (≥95%)'; stuntingCls='gi-normal'; stuntingSev=0; }
+
+  let global, globalCls, globalAlert='';
+  const w0=wastingSev===0, s0=stuntingSev===0;
+  if(w0&&s0){ global='Eutrófico'; globalCls='gi-normal'; }
+  else if(!w0&&s0){ global='Desnutrición aguda'; globalCls='gi-low'; }
+  else if(w0&&!s0){ global='Desnutrición crónica compensada'; globalCls='gi-low'; }
+  else {
+    global='Desnutrición mixta'; globalCls='gi-low';
+    if(wastingSev===3||stuntingSev===3) globalAlert='⚠️ Riesgo de mortalidad elevado — desnutrición mixta severa';
+  }
+  return {wasting,wastingCls,stunting,stuntingCls,global,globalCls,globalAlert,ptPct,tePct};
+}
+
 let growthCharts = {};
 
 function interpolateWHO(table, monthAge){
@@ -966,7 +1062,7 @@ function growthStatus(val, p3, p15, p85, p97){
 function switchChartTab(type, btn){
   document.querySelectorAll('.chart-tab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
-  ['weight','height','bmi'].forEach(t=>{
+  ['weight','height','bmi','wh'].forEach(t=>{
     const el = document.getElementById('chart-'+t);
     if(el) el.style.display = t===type ? 'block' : 'none';
   });
@@ -1249,16 +1345,16 @@ function renderNewConsult(){
     </div>
     <div id="growth-status-container" style="margin-top:14px"></div>
 <div id="growth-charts-container" style="margin-top:16px;display:none">
-  <div class="chart-tabs">
-    <button class="chart-tab active" onclick="switchChartTab('weight',this)">Peso/Edad</button>
-    <button class="chart-tab" onclick="switchChartTab('height',this)">Talla/Edad</button>
-    <button class="chart-tab" onclick="switchChartTab('bmi',this)">IMC/Edad</button>
+  <div class="chart-tabs" id="chart-tabs-row">
+    <!-- tabs se inyectan dinámicamente según edad -->
   </div>
   <div id="chart-weight" class="chart-container"><canvas id="canvas-weight"></canvas></div>
   <div id="chart-height" class="chart-container" style="display:none"><canvas id="canvas-height"></canvas></div>
   <div id="chart-bmi" class="chart-container" style="display:none"><canvas id="canvas-bmi"></canvas></div>
+  <div id="chart-wh" class="chart-container" style="display:none"><canvas id="canvas-wh"></canvas></div>
   <div class="chart-legend">
-    <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#e53e3e;width:12px;height:12px;border-radius:50%"></div> Paciente</div>
+    <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#e53e3e;width:12px;height:12px;border-radius:50%"></div> Control actual</div>
+    <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#38a169;border-top:2px dashed #38a169;height:0;width:20px;border-radius:0"></div> <div style="width:10px;height:10px;border-radius:50%;background:#38a169;display:inline-block;margin-left:2px"></div> Controles anteriores</div>
     <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#1a56a0"></div> P50</div>
     <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#4299e1"></div> P15-P85</div>
     <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#bee3f8"></div> P3-P97</div>
@@ -1516,18 +1612,20 @@ function updateAge(){
 }
 
 // ===========================
-// GROWTH / NUTRITION
+// GROWTH / NUTRITION — Age-aware
+// Evidence basis:
+// < 24m:   P/E + T/E + P/T → Waterlow [GUÍA-OFICIAL: WHO/UNICEF 2019]
+// 24–60m:  P/E + T/E + IMC/Edad OMS 2006 + Waterlow [GUÍA-OFICIAL: WHO 2006]
+// ≥ 60m:   P/E + T/E + IMC/Edad OMS 2007 [GUÍA-OFICIAL: WHO 2007; AAP 2023]
 // ===========================
 function updateGrowth(){
   const dob = document.getElementById('f-dob')?.value;
-  const fecha = document.getElementById('f-fecha')?.value || new Date().toISOString().slice(0,10);
   const sexo = document.getElementById('f-sexo')?.value;
   const pesoEl = document.getElementById('f-peso');
   const tallaEl = document.getElementById('f-talla');
   const imcEl = document.getElementById('f-imc');
   const container = document.getElementById('growth-status-container');
   const chartsContainer = document.getElementById('growth-charts-container');
-
   if(!dob || !sexo || !container) return;
 
   const ageCalc = calcAge(dob);
@@ -1535,105 +1633,357 @@ function updateGrowth(){
   const isMale = sexo === 'M';
   const peso = parseFloat(pesoEl?.value) || null;
   const talla = parseFloat(tallaEl?.value) || null;
-  const imc = (peso && talla) ? parseFloat((peso / ((talla/100)**2)).toFixed(1)) : null;
-  if(imcEl && imc) imcEl.value = imc;
+  const imc = (peso && talla) ? parseFloat((peso/((talla/100)**2)).toFixed(1)) : null;
+
+  // Update IMC box visibility: only show for ≥ 24m
+  const imcBox = document.getElementById('f-imc')?.closest('.vital-box');
+  if(imcBox) imcBox.style.display = monthAge >= 24 ? '' : 'none';
+  if(imcEl) imcEl.value = (imc && monthAge >= 24) ? imc : '';
 
   const waTable = isMale ? WHO_WA_BOYS : WHO_WA_GIRLS;
   const haTable = isMale ? WHO_HA_BOYS : WHO_HA_GIRLS;
   const bmiTable = isMale ? WHO_BMI_BOYS : WHO_BMI_GIRLS;
-
-  const wRef = interpolateWHO(waTable, monthAge);
-  const hRef = interpolateWHO(haTable, monthAge);
+  const wRef  = interpolateWHO(waTable, monthAge);
+  const hRef  = interpolateWHO(haTable, monthAge);
   const bmiRef = interpolateWHO(bmiTable, monthAge);
 
-  const wStat = (peso && wRef) ? growthStatus(peso, wRef.p3, wRef.p15, wRef.p85, wRef.p97) : {label:'Sin dato',cls:'gi-unknown'};
-  const hStat = (talla && hRef) ? growthStatus(talla, hRef.p3, hRef.p15, hRef.p85, hRef.p97) : {label:'Sin dato',cls:'gi-unknown'};
-  const bmiStat = (imc && bmiRef) ? growthStatus(imc, bmiRef.p3, bmiRef.p15, bmiRef.p85, bmiRef.p97) : {label:'Sin dato',cls:'gi-unknown'};
+  // Waterlow: P/T% and T/E%
+  const medWforH = (peso && talla) ? getMedianWeightForHeight(talla, isMale) : null;
+  const medHforA = getMedianHeightForAge(monthAge, isMale);
+  const ptPct = (peso && medWforH) ? parseFloat((peso/medWforH*100).toFixed(1)) : null;
+  const tePct = (talla && medHforA) ? parseFloat((talla/medHforA*100).toFixed(1)) : null;
+  const wl = waterlowClassify(ptPct, tePct);
 
-  let warn = '';
-  if(wStat.label.includes('Bajo') || hStat.label.includes('Bajo'))
-    warn = `<div class="alert alert-warning" style="margin-top:10px">⚠️ Indicadores por debajo del rango normal (&lt;P3). Evaluar estado nutricional.</div>`;
+  const wStat = (peso&&wRef) ? growthStatus(peso,wRef.p3,wRef.p15,wRef.p85,wRef.p97) : {label:'Sin dato',cls:'gi-unknown'};
+  const hStat = (talla&&hRef) ? growthStatus(talla,hRef.p3,hRef.p15,hRef.p85,hRef.p97) : {label:'Sin dato',cls:'gi-unknown'};
+  const bmiStat = (imc&&bmiRef) ? growthStatus(imc,bmiRef.p3,bmiRef.p15,bmiRef.p85,bmiRef.p97) : {label:'Sin dato',cls:'gi-unknown'};
 
-  container.innerHTML = `
-    <div class="growth-card">
+  let html = '';
+
+  // ── MODO < 24 meses ──
+  if(monthAge < 24){
+    html = `
+    <div class="evidence-badge">
+      <span class="ev-icon">📋</span>
+      <div><strong>[GUÍA-OFICIAL]</strong> &lt;24 meses: se usa <strong>Peso/Talla + Talla/Edad → Waterlow</strong>.
+      IMC/Edad no aplica en este grupo. <em>Fuente: WHO/UNICEF Anthropometric Indicators 2019; WHO Growth Standards 2006</em></div>
+    </div>
+    <div class="waterlow-row">
       <div class="growth-indicator ${wStat.cls}">
         <div class="gi-label">Peso/Edad</div>
-        <div class="gi-value">${peso ? peso+' kg' : '—'}</div>
-        <div class="gi-status">${wStat.label}</div>
-        ${wRef ? `<div style="font-size:10px;color:#718096;margin-top:4px">P50: ${wRef.p50.toFixed(1)} kg</div>` : ''}
+        <div class="gi-value">${peso?peso+' kg':'—'}</div>
+        <div class="gi-status" style="font-size:11px">${wStat.label}</div>
+        ${wRef?`<div style="font-size:10px;color:#718096;margin-top:3px">P50: ${wRef.p50.toFixed(1)} kg</div>`:''}
+      </div>
+      <div class="growth-indicator ${hStat.cls}">
+        <div class="gi-label">Talla/Longitud Edad</div>
+        <div class="gi-value">${talla?talla+' cm':'—'}</div>
+        <div class="gi-status" style="font-size:11px">${hStat.label}</div>
+        ${hRef?`<div style="font-size:10px;color:#718096;margin-top:3px">P50: ${hRef.p50.toFixed(1)} cm</div>`:''}
+      </div>
+    </div>
+    <div style="background:#f7fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-top:4px">
+      <div style="font-size:12px;font-weight:700;color:#1a56a0;margin-bottom:10px;display:flex;align-items:center;gap:6px">
+        🏷️ Clasificación Waterlow
+        <span style="font-size:10px;font-weight:600;background:#ebf4ff;border:1px solid #bee3f8;color:#1a56a0;border-radius:4px;padding:1px 7px">[GUÍA-OFICIAL: Waterlow 1972 / WHO 2006]</span>
+      </div>
+      <div class="waterlow-grid">
+        <div class="growth-indicator ${wl.wastingCls}">
+          <div class="gi-label">P/T%</div>
+          <div class="gi-value">${ptPct!==null?ptPct+'%':'—'}</div>
+          <div class="gi-status" style="font-size:10px">${wl.wasting}</div>
+          ${medWforH?`<div style="font-size:10px;color:#718096;margin-top:3px">Ref: ${medWforH.toFixed(1)} kg</div>`:''}
+        </div>
+        <div class="growth-indicator ${wl.stuntingCls}">
+          <div class="gi-label">T/E%</div>
+          <div class="gi-value">${tePct!==null?tePct+'%':'—'}</div>
+          <div class="gi-status" style="font-size:10px">${wl.stunting}</div>
+          ${medHforA?`<div style="font-size:10px;color:#718096;margin-top:3px">Ref: ${medHforA.toFixed(1)} cm</div>`:''}
+        </div>
+        <div class="growth-indicator ${wl.globalCls}">
+          <div class="gi-label">Diagnóstico Global</div>
+          <div class="gi-value" style="font-size:13px">${wl.global}</div>
+        </div>
+      </div>
+      ${wl.globalAlert?`<div class="wl-alert">⚠️ ${wl.globalAlert}</div>`:''}
+    </div>`;
+  }
+
+  // ── MODO 24–59 meses ──
+  else if(monthAge < 60){
+    html = `
+    <div class="evidence-badge">
+      <span class="ev-icon">📋</span>
+      <div><strong>[GUÍA-OFICIAL]</strong> 2–5 años: se muestra <strong>IMC/Edad OMS 2006 + Waterlow</strong> (ambos válidos en este rango).
+      <em>Fuente: WHO Growth Standards 2006; WHO/UNICEF 2019</em></div>
+    </div>
+    <div class="waterlow-row">
+      <div class="growth-indicator ${wStat.cls}">
+        <div class="gi-label">Peso/Edad</div>
+        <div class="gi-value">${peso?peso+' kg':'—'}</div>
+        <div class="gi-status" style="font-size:11px">${wStat.label}</div>
+        ${wRef?`<div style="font-size:10px;color:#718096;margin-top:3px">P50: ${wRef.p50.toFixed(1)} kg</div>`:''}
       </div>
       <div class="growth-indicator ${hStat.cls}">
         <div class="gi-label">Talla/Edad</div>
-        <div class="gi-value">${talla ? talla+' cm' : '—'}</div>
+        <div class="gi-value">${talla?talla+' cm':'—'}</div>
+        <div class="gi-status" style="font-size:11px">${hStat.label}</div>
+        ${hRef?`<div style="font-size:10px;color:#718096;margin-top:3px">P50: ${hRef.p50.toFixed(1)} cm</div>`:''}
+      </div>
+    </div>
+    <div class="waterlow-row" style="margin-top:0">
+      <div class="growth-indicator ${bmiStat.cls}">
+        <div class="gi-label">IMC/Edad (OMS 2006)</div>
+        <div class="gi-value">${imc?imc+' kg/m²':'—'}</div>
+        <div class="gi-status" style="font-size:11px">${bmiStat.label}</div>
+        ${bmiRef?`<div style="font-size:10px;color:#718096;margin-top:3px">P50: ${bmiRef.p50.toFixed(1)} kg/m²</div>`:''}
+      </div>
+      <div style="background:#f7fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px">
+        <div style="font-size:11px;font-weight:700;color:#1a56a0;margin-bottom:8px">🏷️ Waterlow <span style="font-size:10px;font-weight:600;background:#ebf4ff;border:1px solid #bee3f8;color:#1a56a0;border-radius:4px;padding:1px 6px">[GUÍA-OFICIAL]</span></div>
+        <div style="font-size:11px;margin-bottom:4px"><strong>P/T%:</strong> ${ptPct!==null?ptPct+'%':'—'} → <span class="badge ${wl.wastingCls==='gi-normal'?'badge-green':'badge-red'}">${wl.wasting}</span></div>
+        <div style="font-size:11px;margin-bottom:4px"><strong>T/E%:</strong> ${tePct!==null?tePct+'%':'—'} → <span class="badge ${wl.stuntingCls==='gi-normal'?'badge-green':'badge-red'}">${wl.stunting}</span></div>
+        <div style="font-size:12px;font-weight:800;margin-top:6px;color:${wl.globalCls==='gi-normal'?'#276749':'#c53030'}">${wl.global}</div>
+        ${wl.globalAlert?`<div style="font-size:10px;color:#9b2c2c;margin-top:4px">⚠️ ${wl.globalAlert}</div>`:''}
+      </div>
+    </div>`;
+  }
+
+  // ── MODO ≥ 60 meses ──
+  else{
+    const warnBmi = (bmiStat.label.includes('Bajo')||bmiStat.label.includes('Riesgo'))
+      ? `<div class="alert alert-warning" style="margin-top:10px">⚠️ IMC/Edad por debajo de rangos normales. Evaluar estado nutricional.</div>` : '';
+    html = `
+    <div class="evidence-badge">
+      <span class="ev-icon">📋</span>
+      <div><strong>[GUÍA-OFICIAL]</strong> ≥5 años: <strong>IMC/Edad OMS 2007</strong> es el indicador estándar.
+      <em>Fuente: WHO Reference 2007; AAP CPG Obesity 2023 (Pediatrics 151:e2022060640)</em></div>
+    </div>
+    <div class="growth-card">
+      <div class="growth-indicator ${wStat.cls}">
+        <div class="gi-label">Peso/Edad</div>
+        <div class="gi-value">${peso?peso+' kg':'—'}</div>
+        <div class="gi-status">${wStat.label}</div>
+        ${wRef?`<div style="font-size:10px;color:#718096;margin-top:4px">P50: ${wRef.p50.toFixed(1)} kg</div>`:''}
+      </div>
+      <div class="growth-indicator ${hStat.cls}">
+        <div class="gi-label">Talla/Edad</div>
+        <div class="gi-value">${talla?talla+' cm':'—'}</div>
         <div class="gi-status">${hStat.label}</div>
-        ${hRef ? `<div style="font-size:10px;color:#718096;margin-top:4px">P50: ${hRef.p50.toFixed(1)} cm</div>` : ''}
+        ${hRef?`<div style="font-size:10px;color:#718096;margin-top:4px">P50: ${hRef.p50.toFixed(1)} cm</div>`:''}
       </div>
       <div class="growth-indicator ${bmiStat.cls}">
-        <div class="gi-label">IMC/Edad</div>
-        <div class="gi-value">${imc ? imc+' kg/m²' : '—'}</div>
+        <div class="gi-label">IMC/Edad (OMS 2007)</div>
+        <div class="gi-value">${imc?imc+' kg/m²':'—'}</div>
         <div class="gi-status">${bmiStat.label}</div>
-        ${bmiRef ? `<div style="font-size:10px;color:#718096;margin-top:4px">P50: ${bmiRef.p50.toFixed(1)} kg/m²</div>` : ''}
+        ${bmiRef?`<div style="font-size:10px;color:#718096;margin-top:4px">P50: ${bmiRef.p50.toFixed(1)} kg/m²</div>`:''}
       </div>
-    </div>${warn}`;
+    </div>${warnBmi}`;
+  }
 
-  // Show charts
-  if(chartsContainer) chartsContainer.style.display = 'block';
-  renderGrowthCharts(monthAge, isMale, peso, talla, imc);
+  container.innerHTML = html;
+  if(chartsContainer) chartsContainer.style.display='block';
+
+  // ── Recopilar historial de controles anteriores ──
+  let patientHistory = [];
+  if(formPatientId && DB.patients[formPatientId]){
+    const patDob = DB.patients[formPatientId].fechaNac || dob;
+    patientHistory = Object.values(DB.consultations)
+      .filter(c => c.patientId===formPatientId && (c.peso||c.talla))
+      .sort((a,b) => a.fecha.localeCompare(b.fecha))
+      .map(c => {
+        const birth = new Date(patDob+'T12:00:00');
+        const consult = new Date(c.fecha+'T12:00:00');
+        const ageMonths = Math.max(0, (consult-birth)/(1000*60*60*24*30.4375));
+        const pw = c.peso ? parseFloat(c.peso) : null;
+        const pt = c.talla ? parseFloat(c.talla) : null;
+        return {
+          monthAge: parseFloat(ageMonths.toFixed(1)),
+          peso: pw,
+          talla: pt,
+          imc: (pw&&pt) ? parseFloat((pw/((pt/100)**2)).toFixed(1)) : null,
+          fecha: c.fecha
+        };
+      })
+      .filter(h => h.monthAge>=0 && h.monthAge<=144);
+  }
+
+  renderGrowthCharts(monthAge, isMale, peso, talla, imc, ptPct, tePct, patientHistory);
 }
 
-function renderGrowthCharts(currentMonth, isMale, peso, talla, imc){
+function renderGrowthCharts(currentMonth, isMale, peso, talla, imc, ptPct, tePct, patientHistory){
+  patientHistory = patientHistory || [];
   const waTable = isMale ? WHO_WA_BOYS : WHO_WA_GIRLS;
   const haTable = isMale ? WHO_HA_BOYS : WHO_HA_GIRLS;
   const bmiTable = isMale ? WHO_BMI_BOYS : WHO_BMI_GIRLS;
+  const maxMonth = Math.min(Math.max(currentMonth+6, 24), 120);
 
-  const maxMonth = Math.min(Math.max(currentMonth + 6, 24), 120);
+  // Helper: build sparse history dataset aligned to filtered WHO x-axis
+  function buildHistorySeries(filtered, history, valueKey){
+    if(!history.length) return null;
+    // Map each history point to its nearest x-axis index
+    const indexMap = {};
+    history.forEach(h => {
+      const val = h[valueKey];
+      if(!val || isNaN(val)) return;
+      const idx = filtered.reduce((b,d,i) =>
+        Math.abs(d.m - h.monthAge) < Math.abs(filtered[b].m - h.monthAge) ? i : b, 0);
+      // Keep earliest if collision (left-to-right reading)
+      if(indexMap[idx] === undefined) indexMap[idx] = {val, fecha:h.fecha};
+    });
+    const data = filtered.map((_,i) => indexMap[i]?.val ?? null);
+    if(data.every(v=>v===null)) return null;
+    return {
+      label:'Controles anteriores',
+      data,
+      borderColor:'#38a169',
+      backgroundColor:'#38a169',
+      borderWidth:2,
+      pointRadius: data.map(v=>v?6:0),
+      pointStyle:'circle',
+      showLine:true,
+      spanGaps:true,
+      tension:0.35,
+      borderDash:[5,3],
+      pointHoverRadius:8
+    };
+  }
 
-  function makeChart(canvasId, table, label, unit, patientVal){
+  // Build dynamic tabs based on age group
+  const tabsRow = document.getElementById('chart-tabs-row');
+  let tabsHtml = '';
+  if(currentMonth < 24){
+    tabsHtml = `
+      <button class="chart-tab active" onclick="switchChartTab('weight',this)">Peso/Edad</button>
+      <button class="chart-tab" onclick="switchChartTab('height',this)">Talla/Edad</button>
+      <button class="chart-tab" onclick="switchChartTab('wh',this)">Peso/Talla</button>`;
+  } else if(currentMonth < 60){
+    tabsHtml = `
+      <button class="chart-tab active" onclick="switchChartTab('weight',this)">Peso/Edad</button>
+      <button class="chart-tab" onclick="switchChartTab('height',this)">Talla/Edad</button>
+      <button class="chart-tab" onclick="switchChartTab('bmi',this)">IMC/Edad</button>
+      <button class="chart-tab" onclick="switchChartTab('wh',this)">Peso/Talla</button>`;
+  } else {
+    tabsHtml = `
+      <button class="chart-tab active" onclick="switchChartTab('weight',this)">Peso/Edad</button>
+      <button class="chart-tab" onclick="switchChartTab('height',this)">Talla/Edad</button>
+      <button class="chart-tab" onclick="switchChartTab('bmi',this)">IMC/Edad</button>`;
+  }
+  if(tabsRow) tabsRow.innerHTML = tabsHtml;
+
+  // Show only the weight chart initially, hide others
+  ['weight','height','bmi','wh'].forEach(t=>{
+    const el = document.getElementById('chart-'+t);
+    if(el) el.style.display = t==='weight' ? 'block' : 'none';
+  });
+
+  function makeChart(canvasId, labels, datasets){
     const ctx = document.getElementById(canvasId)?.getContext('2d');
     if(!ctx) return;
     if(growthCharts[canvasId]) growthCharts[canvasId].destroy();
-
-    const filtered = table.filter(d => d.m <= maxMonth);
-    const filteredLabels = filtered.map(d => d.m < 24 ? d.m+'m' : (d.m/12).toFixed(1)+'a');
-
-    const patientIdx = filtered.reduce((best,d,i) => Math.abs(d.m - currentMonth) < Math.abs(filtered[best].m - currentMonth) ? i : best, 0);
-    const patientDot = filtered.map((_,i) => i === patientIdx && patientVal ? patientVal : null);
-
     growthCharts[canvasId] = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: filteredLabels,
-        datasets: [
-          {label:'P3', data: filtered.map(d=>d.p3), borderColor:'#bee3f8', borderWidth:1.5, fill:false, pointRadius:0, tension:0.4, borderDash:[4,4]},
-          {label:'P15', data: filtered.map(d=>d.p15), borderColor:'#4299e1', borderWidth:1.5, fill:false, pointRadius:0, tension:0.4},
-          {label:'P50', data: filtered.map(d=>d.p50), borderColor:'#1a56a0', borderWidth:2.5, fill:false, pointRadius:0, tension:0.4},
-          {label:'P85', data: filtered.map(d=>d.p85), borderColor:'#4299e1', borderWidth:1.5, fill:false, pointRadius:0, tension:0.4},
-          {label:'P97', data: filtered.map(d=>d.p97), borderColor:'#bee3f8', borderWidth:1.5, fill:false, pointRadius:0, tension:0.4, borderDash:[4,4]},
-          {label:'Paciente', data: patientDot, borderColor:'#e53e3e', backgroundColor:'#e53e3e', borderWidth:2, pointRadius: patientDot.map(v=>v?8:0), pointHoverRadius:10, showLine:false, tension:0}
-        ]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: {
-          legend: {display: false},
-          tooltip: {
-            callbacks: {
-              label: ctx => ctx.dataset.label + ': ' + (ctx.parsed.y ? ctx.parsed.y.toFixed(1) + ' ' + unit : '')
-            }
-          }
+      type:'line',
+      data:{labels, datasets},
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{
+          legend:{display:false},
+          tooltip:{callbacks:{label:c=>c.dataset.label+': '+(c.parsed.y?c.parsed.y.toFixed(1):'')}}
         },
-        scales: {
-          x: {ticks:{font:{size:10}}, grid:{color:'#f0f4f8'}},
-          y: {ticks:{font:{size:10}}, grid:{color:'#f0f4f8'},
-              title:{display:true, text:label+' ('+unit+')', font:{size:11}}}
+        scales:{
+          x:{ticks:{font:{size:10}},grid:{color:'#f0f4f8'}},
+          y:{ticks:{font:{size:10}},grid:{color:'#f0f4f8'},
+            title:{display:true,text:datasets[2]?.label||'',font:{size:10}}}
         }
       }
     });
   }
 
-  makeChart('canvas-weight', waTable, 'Peso', 'kg', peso);
-  makeChart('canvas-height', haTable, 'Talla', 'cm', talla);
-  makeChart('canvas-bmi', bmiTable, 'IMC', 'kg/m²', imc);
+  // === PESO/EDAD chart ===
+  {
+    const filtered = waTable.filter(d=>d.m<=maxMonth);
+    const lbl = filtered.map(d=>d.m<24?d.m+'m':(d.m/12).toFixed(1)+'a');
+    const pidx = filtered.reduce((b,d,i)=>Math.abs(d.m-currentMonth)<Math.abs(filtered[b].m-currentMonth)?i:b,0);
+    const dot = filtered.map((_,i)=>i===pidx&&peso?peso:null);
+    const histSeries = buildHistorySeries(filtered, patientHistory, 'peso');
+    const datasets = [
+      {label:'P3',data:filtered.map(d=>d.p3),borderColor:'#bee3f8',borderWidth:1.5,fill:false,pointRadius:0,tension:0.4,borderDash:[4,4]},
+      {label:'P15',data:filtered.map(d=>d.p15),borderColor:'#4299e1',borderWidth:1.5,fill:false,pointRadius:0,tension:0.4},
+      {label:'P50 (kg)',data:filtered.map(d=>d.p50),borderColor:'#1a56a0',borderWidth:2.5,fill:false,pointRadius:0,tension:0.4},
+      {label:'P85',data:filtered.map(d=>d.p85),borderColor:'#4299e1',borderWidth:1.5,fill:false,pointRadius:0,tension:0.4},
+      {label:'P97',data:filtered.map(d=>d.p97),borderColor:'#bee3f8',borderWidth:1.5,fill:false,pointRadius:0,tension:0.4,borderDash:[4,4]},
+    ];
+    if(histSeries) datasets.push(histSeries);
+    datasets.push({label:'Control actual',data:dot,borderColor:'#e53e3e',backgroundColor:'#e53e3e',borderWidth:2,pointRadius:dot.map(v=>v?9:0),pointHoverRadius:11,showLine:false});
+    makeChart('canvas-weight', lbl, datasets);
+  }
+
+  // === TALLA/EDAD chart ===
+  {
+    const filtered = haTable.filter(d=>d.m<=maxMonth);
+    const lbl = filtered.map(d=>d.m<24?d.m+'m':(d.m/12).toFixed(1)+'a');
+    const pidx = filtered.reduce((b,d,i)=>Math.abs(d.m-currentMonth)<Math.abs(filtered[b].m-currentMonth)?i:b,0);
+    const dot = filtered.map((_,i)=>i===pidx&&talla?talla:null);
+    const histSeries = buildHistorySeries(filtered, patientHistory, 'talla');
+    const datasets = [
+      {label:'P3',data:filtered.map(d=>d.p3),borderColor:'#bee3f8',borderWidth:1.5,fill:false,pointRadius:0,tension:0.4,borderDash:[4,4]},
+      {label:'P15',data:filtered.map(d=>d.p15),borderColor:'#4299e1',borderWidth:1.5,fill:false,pointRadius:0,tension:0.4},
+      {label:'P50 (cm)',data:filtered.map(d=>d.p50),borderColor:'#1a56a0',borderWidth:2.5,fill:false,pointRadius:0,tension:0.4},
+      {label:'P85',data:filtered.map(d=>d.p85),borderColor:'#4299e1',borderWidth:1.5,fill:false,pointRadius:0,tension:0.4},
+      {label:'P97',data:filtered.map(d=>d.p97),borderColor:'#bee3f8',borderWidth:1.5,fill:false,pointRadius:0,tension:0.4,borderDash:[4,4]},
+    ];
+    if(histSeries) datasets.push(histSeries);
+    datasets.push({label:'Control actual',data:dot,borderColor:'#e53e3e',backgroundColor:'#e53e3e',borderWidth:2,pointRadius:dot.map(v=>v?9:0),pointHoverRadius:11,showLine:false});
+    makeChart('canvas-height', lbl, datasets);
+  }
+
+  // === IMC/EDAD chart (≥ 24m only) ===
+  if(currentMonth >= 24){
+    const filtered = bmiTable.filter(d=>d.m<=maxMonth&&d.m>=24);
+    const lbl = filtered.map(d=>(d.m/12).toFixed(1)+'a');
+    const pidx = filtered.reduce((b,d,i)=>Math.abs(d.m-currentMonth)<Math.abs(filtered[b].m-currentMonth)?i:b,0);
+    const dot = filtered.map((_,i)=>i===pidx&&imc?imc:null);
+    const histSeries = buildHistorySeries(filtered, patientHistory.filter(h=>h.monthAge>=24), 'imc');
+    const datasets = [
+      {label:'P3',data:filtered.map(d=>d.p3),borderColor:'#bee3f8',borderWidth:1.5,fill:false,pointRadius:0,tension:0.4,borderDash:[4,4]},
+      {label:'P15',data:filtered.map(d=>d.p15),borderColor:'#4299e1',borderWidth:1.5,fill:false,pointRadius:0,tension:0.4},
+      {label:'P50 (kg/m²)',data:filtered.map(d=>d.p50),borderColor:'#1a56a0',borderWidth:2.5,fill:false,pointRadius:0,tension:0.4},
+      {label:'P85',data:filtered.map(d=>d.p85),borderColor:'#4299e1',borderWidth:1.5,fill:false,pointRadius:0,tension:0.4},
+      {label:'P97',data:filtered.map(d=>d.p97),borderColor:'#bee3f8',borderWidth:1.5,fill:false,pointRadius:0,tension:0.4,borderDash:[4,4]},
+    ];
+    if(histSeries) datasets.push(histSeries);
+    datasets.push({label:'Control actual IMC',data:dot,borderColor:'#e53e3e',backgroundColor:'#e53e3e',borderWidth:2,pointRadius:dot.map(v=>v?9:0),pointHoverRadius:11,showLine:false});
+    makeChart('canvas-bmi', lbl, datasets);
+  }
+
+  // === PESO/TALLA chart (< 60m: by height axis) ===
+  if(currentMonth < 60 && talla){
+    const whTable = isMale ? WHO_WH_P50_BOYS : WHO_WH_P50_GIRLS;
+    const maxH = Math.min(120, Math.max(talla+10, ...patientHistory.map(h=>h.talla||0)));
+    const heights = Object.keys(whTable).map(Number).filter(h=>h>=45&&h<=maxH);
+    const lbl = heights.map(h=>h+'cm');
+    const p50 = heights.map(h=>whTable[h]);
+    const p90 = heights.map(h=>parseFloat((whTable[h]*0.90).toFixed(2)));
+    const p80 = heights.map(h=>parseFloat((whTable[h]*0.80).toFixed(2)));
+    const p70 = heights.map(h=>parseFloat((whTable[h]*0.70).toFixed(2)));
+    // Current consultation dot
+    const tallaCm = Math.round(talla);
+    const patDot = heights.map(h=>h===tallaCm&&peso?peso:null);
+    // Historical dots on P/T chart (placed at their actual height)
+    const histWHDots = heights.map(h => {
+      const match = patientHistory.find(hh => hh.talla && Math.round(hh.talla)===h && hh.peso);
+      return match ? match.peso : null;
+    });
+    const hasHistWH = histWHDots.some(v=>v!==null);
+    const datasets = [
+      {label:'Límite leve (90% P50)',data:p90,borderColor:'#fbd38d',borderWidth:1.5,fill:false,pointRadius:0,tension:0.3,borderDash:[4,4]},
+      {label:'Límite moderado (80% P50)',data:p80,borderColor:'#fc8181',borderWidth:1.5,fill:false,pointRadius:0,tension:0.3,borderDash:[4,4]},
+      {label:'Límite severo (70% P50)',data:p70,borderColor:'#9b2c2c',borderWidth:1.5,fill:false,pointRadius:0,tension:0.3,borderDash:[4,4]},
+      {label:'P50 (kg)',data:p50,borderColor:'#1a56a0',borderWidth:2.5,fill:false,pointRadius:0,tension:0.3},
+    ];
+    if(hasHistWH) datasets.push({label:'Controles anteriores',data:histWHDots,borderColor:'#38a169',backgroundColor:'#38a169',borderWidth:2,pointRadius:histWHDots.map(v=>v?6:0),showLine:true,spanGaps:true,tension:0.3,borderDash:[5,3]});
+    datasets.push({label:'Control actual',data:patDot,borderColor:'#e53e3e',backgroundColor:'#e53e3e',borderWidth:2,pointRadius:patDot.map(v=>v?9:0),pointHoverRadius:11,showLine:false});
+    makeChart('canvas-wh', lbl, datasets);
+  }
 }
 
 // ===========================
