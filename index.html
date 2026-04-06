@@ -1081,8 +1081,13 @@ let growthCharts = {};
 
 function interpolateWHO(table, monthAge){
   if(!table || !table.length) return null;
+  // Clamp: no extrapolar fuera del rango OMS
+  const minM = table[0].m;
+  const maxM = table[table.length-1].m;
+  if(monthAge < minM) return table[0];
+  if(monthAge > maxM) return null; // fuera del rango OMS → sin dato
   // Find surrounding data points
-  let lower = table[0], upper = table[table.length-1];
+  let lower = table[0], upper = table[0];
   for(let i=0;i<table.length-1;i++){
     if(table[i].m <= monthAge && table[i+1].m >= monthAge){
       lower = table[i]; upper = table[i+1]; break;
@@ -1099,12 +1104,36 @@ function interpolateWHO(table, monthAge){
   };
 }
 
-function growthStatus(val, p3, p15, p85, p97){
-  if(val < p3) return {label:'Bajo peso severo (<P3)',cls:'gi-low'};
-  if(val < p15) return {label:'Riesgo (<P15)',cls:'gi-low'};
-  if(val <= p85) return {label:'Normal (P15-P85)',cls:'gi-normal'};
-  if(val <= p97) return {label:'Sobrepeso (P85-P97)',cls:'gi-high'};
-  return {label:'Obesidad (>P97)',cls:'gi-high'};
+// Etiquetas OMS específicas por indicador
+// [GUÍA-OFICIAL: WHO Child Growth Standards 2006; WHO Reference 2007]
+// Peso/Edad: "Bajo peso" (no "bajo peso severo" — reservado para Z<-3)
+// Talla/Edad: "Talla baja" / "Talla alta" (no "bajo peso"!)
+// IMC/Edad: "Delgadez" / "Sobrepeso" / "Obesidad"
+function growthStatus(val, p3, p15, p85, p97, type){
+  type = type || 'weight';
+  const labels = {
+    weight: {
+      low3:'Bajo peso (<P3)', low15:'Riesgo de bajo peso (<P15)',
+      normal:'Peso adecuado (P15-P85)',
+      high85:'Peso elevado para edad (P85-P97)', high97:'Peso elevado para edad (>P97)'
+    },
+    height: {
+      low3:'Talla baja (<P3)', low15:'Riesgo de talla baja (<P15)',
+      normal:'Talla adecuada (P15-P85)',
+      high85:'Talla alta (P85-P97)', high97:'Talla alta (>P97)'
+    },
+    bmi: {
+      low3:'Delgadez severa (<P3)', low15:'Delgadez (<P15)',
+      normal:'Normal (P15-P85)',
+      high85:'Sobrepeso (P85-P97)', high97:'Obesidad (>P97)'
+    }
+  };
+  const L = labels[type] || labels.weight;
+  if(val < p3) return {label:L.low3, cls:'gi-low'};
+  if(val < p15) return {label:L.low15, cls:'gi-low'};
+  if(val <= p85) return {label:L.normal, cls:'gi-normal'};
+  if(val <= p97) return {label:L.high85, cls:'gi-high'};
+  return {label:L.high97, cls:'gi-high'};
 }
 
 function switchChartTab(type, btn){
@@ -1702,9 +1731,9 @@ function updateGrowth(){
   const tePct = (talla && medHforA) ? parseFloat((talla/medHforA*100).toFixed(1)) : null;
   const wl = waterlowClassify(ptPct, tePct);
 
-  const wStat = (peso&&wRef) ? growthStatus(peso,wRef.p3,wRef.p15,wRef.p85,wRef.p97) : {label:'Sin dato',cls:'gi-unknown'};
-  const hStat = (talla&&hRef) ? growthStatus(talla,hRef.p3,hRef.p15,hRef.p85,hRef.p97) : {label:'Sin dato',cls:'gi-unknown'};
-  const bmiStat = (imc&&bmiRef) ? growthStatus(imc,bmiRef.p3,bmiRef.p15,bmiRef.p85,bmiRef.p97) : {label:'Sin dato',cls:'gi-unknown'};
+  const wStat = (peso&&wRef) ? growthStatus(peso,wRef.p3,wRef.p15,wRef.p85,wRef.p97,'weight') : {label:'Sin dato',cls:'gi-unknown'};
+  const hStat = (talla&&hRef) ? growthStatus(talla,hRef.p3,hRef.p15,hRef.p85,hRef.p97,'height') : {label:'Sin dato',cls:'gi-unknown'};
+  const bmiStat = (imc&&bmiRef) ? growthStatus(imc,bmiRef.p3,bmiRef.p15,bmiRef.p85,bmiRef.p97,'bmi') : {label:'Sin dato',cls:'gi-unknown'};
 
   let html = '';
 
@@ -1798,34 +1827,53 @@ function updateGrowth(){
 
   // ── MODO ≥ 60 meses ──
   else{
-    const warnBmi = (bmiStat.label.includes('Bajo')||bmiStat.label.includes('Riesgo'))
+    // Alerta si IMC bajo
+    const warnBmi = (bmiStat.cls==='gi-low')
       ? `<div class="alert alert-warning" style="margin-top:10px">⚠️ IMC/Edad por debajo de rangos normales. Evaluar estado nutricional.</div>` : '';
+    // Nota contextual: P/E o T/E bajos PERO IMC normal → no es alarma real
+    // [GUÍA-OFICIAL: WHO Technical Report 2006 — P/E no discrimina entre niño bajo-delgado y bajo-robusto;
+    //  IMC/Edad es el indicador de referencia para estado nutricional ≥5 años]
+    const peOrTelow = (wStat.cls==='gi-low' || hStat.cls==='gi-low');
+    const bmiOk = (bmiStat.cls==='gi-normal');
+    const discordNote = (peOrTelow && bmiOk)
+      ? `<div class="alert alert-info" style="margin-top:10px">
+          <strong>Nota clínica:</strong> Peso/Edad y/o Talla/Edad fuera de rango, pero <strong>IMC/Edad es normal</strong>.
+          En ≥5 años el IMC/Edad es el indicador principal de estado nutricional (OMS 2007).
+          P/E aislado no diferencia entre un niño constitutivamente delgado y uno desnutrido.
+          <em>[CONSENSO: Interpretar P/E y T/E en conjunto con IMC/Edad]</em>
+         </div>` : '';
+    // P/E solo tiene referencia OMS hasta 120 meses (10 años)
+    const peOverAge = (monthAge > 120);
+    const peNote = peOverAge ? '<div style="font-size:10px;color:#c05621;margin-top:3px">[Sin referencia OMS >10 años]</div>' : '';
     html = `
     <div class="evidence-badge">
       <span class="ev-icon">📋</span>
-      <div><strong>[GUÍA-OFICIAL]</strong> ≥5 años: <strong>IMC/Edad OMS 2007</strong> es el indicador estándar.
+      <div><strong>[GUÍA-OFICIAL]</strong> ≥5 años: <strong>IMC/Edad OMS 2007</strong> es el indicador estándar para estado nutricional.
+      P/E y T/E son complementarios, no definitivos por sí solos.
       <em>Fuente: WHO Reference 2007; AAP CPG Obesity 2023 (Pediatrics 151:e2022060640)</em></div>
     </div>
     <div class="growth-card">
-      <div class="growth-indicator ${wStat.cls}">
-        <div class="gi-label">Peso/Edad</div>
-        <div class="gi-value">${peso?peso+' kg':'—'}</div>
-        <div class="gi-status">${wStat.label}</div>
-        ${wRef?`<div style="font-size:10px;color:#718096;margin-top:4px">P50: ${wRef.p50.toFixed(1)} kg</div>`:''}
-      </div>
-      <div class="growth-indicator ${hStat.cls}">
-        <div class="gi-label">Talla/Edad</div>
-        <div class="gi-value">${talla?talla+' cm':'—'}</div>
-        <div class="gi-status">${hStat.label}</div>
-        ${hRef?`<div style="font-size:10px;color:#718096;margin-top:4px">P50: ${hRef.p50.toFixed(1)} cm</div>`:''}
-      </div>
-      <div class="growth-indicator ${bmiStat.cls}">
-        <div class="gi-label">IMC/Edad (OMS 2007)</div>
+      <div class="growth-indicator ${bmiStat.cls}" style="border:2px solid ${bmiStat.cls==='gi-normal'?'#9ae6b4':bmiStat.cls==='gi-low'?'#fc8181':'#fbd38d'}">
+        <div class="gi-label" style="color:#1a56a0;font-size:12px">IMC/Edad (OMS 2007)</div>
+        <div style="font-size:9px;font-weight:700;color:#1a56a0;margin-bottom:2px">INDICADOR PRINCIPAL</div>
         <div class="gi-value">${imc?imc+' kg/m²':'—'}</div>
         <div class="gi-status">${bmiStat.label}</div>
         ${bmiRef?`<div style="font-size:10px;color:#718096;margin-top:4px">P50: ${bmiRef.p50.toFixed(1)} kg/m²</div>`:''}
       </div>
-    </div>${warnBmi}`;
+      <div class="growth-indicator ${peOverAge?'gi-unknown':wStat.cls}" style="opacity:${peOverAge?'0.6':'0.85'}">
+        <div class="gi-label">Peso/Edad</div>
+        <div class="gi-value">${peso?peso+' kg':'—'}</div>
+        <div class="gi-status" style="font-size:11px">${peOverAge?'Fuera de rango OMS':wStat.label}</div>
+        ${(!peOverAge&&wRef)?`<div style="font-size:10px;color:#718096;margin-top:4px">P50: ${wRef.p50.toFixed(1)} kg</div>`:''}
+        ${peNote}
+      </div>
+      <div class="growth-indicator ${hStat.cls}" style="opacity:0.85">
+        <div class="gi-label">Talla/Edad</div>
+        <div class="gi-value">${talla?talla+' cm':'—'}</div>
+        <div class="gi-status" style="font-size:11px">${hStat.label}</div>
+        ${hRef?`<div style="font-size:10px;color:#718096;margin-top:4px">P50: ${hRef.p50.toFixed(1)} cm</div>`:''}
+      </div>
+    </div>${discordNote}${warnBmi}`;
   }
 
   container.innerHTML = html;
