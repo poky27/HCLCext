@@ -465,22 +465,39 @@ async function syncConsultToSheets(consult, patient){
       sexo: patient.sexo === 'M' ? 'Masculino' : 'Femenino',
       tutor: patient.tutor||'',
       telefono: patient.telefono||'',
+      direccion: patient.direccion||'',
       fecha: consult.fecha,
+      estab: consult.estab||'',
+      medico: consult.medico||'',
       motivo: consult.motivo||'',
       tiempo: consult.tiempo||'',
+      anamnesis: consult.anamnesis||'',
+      antPeri: consult.antPeri||'',
+      antPat: consult.antPat||'',
+      antDpm: consult.antDpm||'',
+      antFam: consult.antFam||'',
+      antAlim: consult.antAlim||'',
       peso: consult.peso||'',
       talla: consult.talla||'',
+      pc: consult.pc||'',
       fc: consult.fc||'',
       fr: consult.fr||'',
       temp: consult.temp||'',
       sato2: consult.sato2||'',
+      pa: consult.pa||'',
+      glasgow: consult.glasgow||'',
       exfis: consult.exfis||'',
       cie: consult.cie ? consult.cie.map(d=>d.code+' '+d.desc).join(' | ') : '',
-      tratamiento: consult.tratamiento ? consult.tratamiento.map(t=>t.med+' '+t.dosis+' '+t.frec+' x'+t.dias).join(' | ') : '',
+      cieTipo: consult.cieTipo||'definitivo',
+      tratamiento: consult.tratamiento ? consult.tratamiento.map(t=>[t.med,t.dosis,t.frec,t.dias].join(' /// ')).join(' | ') : '',
+      indicaciones: consult.indicaciones||'',
       examenes: consult.examenes||'',
+      resultados: consult.resultados||'',
       interconsulta: consult.interconsulta||'',
       referencia: consult.referencia ? 'Sí' : 'No',
+      refDetalle: consult.refDetalle||'',
       proxCita: consult.proxCita||'',
+      vaccines: consult.vaccines||'{}',
       observaciones: consult.observaciones||'',
       consultId: consult.id
     };
@@ -521,7 +538,7 @@ async function importFromSheets(){
           id: patientId, hc: row.hc, nombre: row.nombre,
           fechaNac: row.fechaNac, sexo: row.sexo==='Masculino'?'M':'F',
           tutor: row.tutor||'', telefono: row.telefono||'',
-          direccion: '', createdAt: row.fecha
+          direccion: row.direccion||'', createdAt: row.fecha
         };
       }
       // Only add consult if not already imported
@@ -529,15 +546,29 @@ async function importFromSheets(){
       if(!existingC && row.consultId){
         DB.consultations[row.consultId] = {
           id: row.consultId, patientId, hc: row.hc, fecha: row.fecha,
-          motivo: row.motivo, tiempo: row.tiempo, peso: row.peso,
-          talla: row.talla, fc: row.fc, fr: row.fr, temp: row.temp,
-          sato2: row.sato2, exfis: row.exfis,
+          estab: row.estab||'', medico: row.medico||'',
+          motivo: row.motivo||'', tiempo: row.tiempo||'',
+          anamnesis: row.anamnesis||'',
+          antPeri: row.antPeri||'', antPat: row.antPat||'',
+          antDpm: row.antDpm||'', antFam: row.antFam||'',
+          antAlim: row.antAlim||'',
+          peso: row.peso||'', talla: row.talla||'', pc: row.pc||'',
+          fc: row.fc||'', fr: row.fr||'', temp: row.temp||'',
+          sato2: row.sato2||'', pa: row.pa||'', glasgow: row.glasgow||'',
+          exfis: row.exfis||'',
           cie: row.cie ? row.cie.split(' | ').map(s=>({code:s.split(' ')[0],desc:s.split(' ').slice(1).join(' ')})) : [],
+          cieTipo: row.cieTipo||'definitivo',
           tratamiento: row.tratamiento ? row.tratamiento.split(' | ').map(s=>{
-            const parts=s.split(' '); return {med:parts[0]||'',dosis:parts[1]||'',frec:parts[2]||'',dias:(parts[3]||'').replace('x','')};
+            const parts=s.split(' /// '); return {med:parts[0]||'',dosis:parts[1]||'',frec:parts[2]||'',dias:parts[3]||''};
           }) : [],
-          examenes: row.examenes, interconsulta: row.interconsulta,
-          referencia: row.referencia==='Sí', proxCita: row.proxCita, observaciones: row.observaciones
+          indicaciones: row.indicaciones||'',
+          examenes: row.examenes||'', resultados: row.resultados||'',
+          interconsulta: row.interconsulta||'',
+          referencia: row.referencia==='Sí',
+          refDetalle: row.refDetalle||'',
+          proxCita: row.proxCita||'',
+          vaccines: row.vaccines||'{}',
+          observaciones: row.observaciones||''
         };
         imported++;
       }
@@ -570,20 +601,28 @@ function showSettingsMsg(msg, color){
 }
 
 function copyAppsScript(){
-  const code = `// HCE Pediátrica — Google Apps Script
+  const code = `// HCE Pediatrica — Google Apps Script (v2 COMPLETO)
 // 1. Reemplaza SHEET_ID con el ID de tu Google Sheet
-// 2. Despliega como Web App (Ejecutar como: Tú, Acceso: Cualquiera)
+// 2. Despliega como Web App (Ejecutar como: Tu, Acceso: Cualquiera)
 
 const SHEET_ID = 'PEGA_AQUI_EL_ID_DE_TU_SHEET';
 const SHEET_NAME = 'Consultas';
 
-const HEADERS = ['HC','Nombre','Fecha Nac','Sexo','Tutor','Teléfono','Fecha Consulta',
-  'Motivo','Tiempo Enf.','Peso','Talla','FC','FR','Temp','SatO2','Examen Físico',
-  'Diagnóstico CIE-10','Tratamiento','Exámenes Aux','Interconsulta','Referencia',
-  'Próxima Cita','Observaciones','ConsultID'];
+const HEADERS = [
+  'HC','Nombre','Fecha Nac','Sexo','Tutor','Telefono','Direccion',
+  'Fecha Consulta','Establecimiento','Medico',
+  'Motivo','Tiempo Enf.','Anamnesis',
+  'Ant. Perinatales','Ant. Patologicos','Ant. DPM','Ant. Familiares','Ant. Alimentarios',
+  'Peso','Talla','PC','FC','FR','Temp','SatO2','PA','Glasgow',
+  'Examen Fisico','Diagnostico CIE-10','Tipo Diagnostico',
+  'Tratamiento','Indicaciones',
+  'Examenes Aux','Resultados',
+  'Interconsulta','Referencia','Detalle Referencia',
+  'Proxima Cita','Vacunas','Observaciones','ConsultID'
+];
 
 function doGet(e){
-  const action = e.parameter.action;
+  const action = (e && e.parameter && e.parameter.action) || '';
   if(action === 'ping') return json({status:'ok'});
   if(action === 'getAll') return json(getAllRows());
   return json({status:'ok'});
@@ -613,35 +652,44 @@ function getSheet(){
 
 function appendRow(d){
   const sheet = getSheet();
-  sheet.appendRow([d.hc,d.nombre,d.fechaNac,d.sexo,d.tutor,d.telefono,d.fecha,
-    d.motivo,d.tiempo,d.peso,d.talla,d.fc,d.fr,d.temp,d.sato2,d.exfis,
-    d.cie,d.tratamiento,d.examenes,d.interconsulta,d.referencia,
-    d.proxCita,d.observaciones,d.consultId]);
+  sheet.appendRow([
+    d.hc||'', d.nombre||'', d.fechaNac||'', d.sexo||'', d.tutor||'', d.telefono||'', d.direccion||'',
+    d.fecha||'', d.estab||'', d.medico||'',
+    d.motivo||'', d.tiempo||'', d.anamnesis||'',
+    d.antPeri||'', d.antPat||'', d.antDpm||'', d.antFam||'', d.antAlim||'',
+    d.peso||'', d.talla||'', d.pc||'', d.fc||'', d.fr||'', d.temp||'', d.sato2||'', d.pa||'', d.glasgow||'',
+    d.exfis||'', d.cie||'', d.cieTipo||'',
+    d.tratamiento||'', d.indicaciones||'',
+    d.examenes||'', d.resultados||'',
+    d.interconsulta||'', d.referencia||'', d.refDetalle||'',
+    d.proxCita||'', d.vaccines||'', d.observaciones||'', d.consultId||''
+  ]);
 }
 
 function getAllRows(){
   const sheet = getSheet();
   const data = sheet.getDataRange().getValues();
   if(data.length < 2) return {rows:[]};
-  const headers = data[0];
-  const rows = data.slice(1).map(row => {
-    const obj = {};
-    headers.forEach((h,i) => {
-      const key = h.toLowerCase().replace(/[^a-z0-9]/g,'');
-      obj[key] = row[i];
-    });
-    // Map back to expected keys
+  const rows = data.slice(1).map(function(row){
     return {
-      hc: row[0], nombre: row[1], fechaNac: row[2], sexo: row[3],
-      tutor: row[4], telefono: row[5], fecha: row[6], motivo: row[7],
-      tiempo: row[8], peso: row[9], talla: row[10], fc: row[11],
-      fr: row[12], temp: row[13], sato2: row[14], exfis: row[15],
-      cie: row[16], tratamiento: row[17], examenes: row[18],
-      interconsulta: row[19], referencia: row[20], proxCita: row[21],
-      observaciones: row[22], consultId: row[23]
+      hc:row[0]||'', nombre:row[1]||'', fechaNac:row[2]||'', sexo:row[3]||'',
+      tutor:row[4]||'', telefono:row[5]||'', direccion:row[6]||'',
+      fecha:row[7]||'', estab:row[8]||'', medico:row[9]||'',
+      motivo:row[10]||'', tiempo:row[11]||'', anamnesis:row[12]||'',
+      antPeri:row[13]||'', antPat:row[14]||'', antDpm:row[15]||'',
+      antFam:row[16]||'', antAlim:row[17]||'',
+      peso:row[18]||'', talla:row[19]||'', pc:row[20]||'',
+      fc:row[21]||'', fr:row[22]||'', temp:row[23]||'', sato2:row[24]||'',
+      pa:row[25]||'', glasgow:row[26]||'',
+      exfis:row[27]||'', cie:row[28]||'', cieTipo:row[29]||'',
+      tratamiento:row[30]||'', indicaciones:row[31]||'',
+      examenes:row[32]||'', resultados:row[33]||'',
+      interconsulta:row[34]||'', referencia:row[35]||'', refDetalle:row[36]||'',
+      proxCita:row[37]||'', vaccines:row[38]||'', observaciones:row[39]||'',
+      consultId:row[40]||''
     };
   });
-  return {rows};
+  return {rows:rows};
 }
 
 function json(obj){
