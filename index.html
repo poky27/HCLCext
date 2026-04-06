@@ -995,6 +995,198 @@ const WHO_BMI_GIRLS = [
 ];
 
 // ===========================
+// WHO 2007 REFERENCE — 5–19 YEARS — Z-SCORES
+// Fuente directa: xlsx descargados de who.int/tools/growth-reference-data-for-5to19-years
+// Campos: sd3n=-3SD, sd2n=-2SD, sd1n=-1SD, sd0=Mediana, sd1=+1SD, sd2=+2SD, sd3=+3SD
+// Muestreo trimestral (cada 3 meses) con interpolación lineal
+// ===========================
+
+// BMI-FOR-AGE 5-19 BOYS (WHO 2007)
+const WHO2007_BMI_BOYS = [
+  {m:61,sd3n:12.1,sd2n:13.0,sd1n:14.1,sd0:15.3,sd1:16.6,sd2:18.3,sd3:20.2},
+  {m:63,sd3n:12.1,sd2n:13.0,sd1n:14.1,sd0:15.3,sd1:16.7,sd2:18.3,sd3:20.2},
+  {m:66,sd3n:12.1,sd2n:13.0,sd1n:14.1,sd0:15.3,sd1:16.7,sd2:18.4,sd3:20.4},
+  {m:69,sd3n:12.1,sd2n:13.0,sd1n:14.1,sd0:15.3,sd1:16.7,sd2:18.4,sd3:20.5},
+  {m:72,sd3n:12.1,sd2n:13.0,sd1n:14.1,sd0:15.3,sd1:16.8,sd2:18.5,sd3:20.7},
+  {m:78,sd3n:12.2,sd2n:13.1,sd1n:14.1,sd0:15.4,sd1:16.9,sd2:18.7,sd3:21.1},
+  {m:84,sd3n:12.2,sd2n:13.1,sd1n:14.2,sd0:15.5,sd1:17.0,sd2:19.0,sd3:21.6},
+  {m:90,sd3n:12.3,sd2n:13.2,sd1n:14.3,sd0:15.6,sd1:17.2,sd2:19.3,sd3:22.1},
+  {m:96,sd3n:12.4,sd2n:13.3,sd1n:14.4,sd0:15.7,sd1:17.4,sd2:19.7,sd3:22.8},
+  {m:102,sd3n:12.5,sd2n:13.4,sd1n:14.5,sd0:15.9,sd1:17.7,sd2:20.1,sd3:23.5},
+  {m:108,sd3n:12.6,sd2n:13.5,sd1n:14.6,sd0:16.0,sd1:17.9,sd2:20.5,sd3:24.3},
+  {m:114,sd3n:12.7,sd2n:13.6,sd1n:14.8,sd0:16.2,sd1:18.2,sd2:20.9,sd3:25.1},
+  {m:120,sd3n:12.8,sd2n:13.7,sd1n:14.9,sd0:16.4,sd1:18.5,sd2:21.4,sd3:26.1},
+  {m:126,sd3n:12.9,sd2n:13.9,sd1n:15.1,sd0:16.7,sd1:18.8,sd2:21.9,sd3:27.0},
+  {m:132,sd3n:13.1,sd2n:14.1,sd1n:15.3,sd0:16.9,sd1:19.2,sd2:22.5,sd3:28.0},
+  {m:138,sd3n:13.2,sd2n:14.2,sd1n:15.5,sd0:17.2,sd1:19.5,sd2:23.0,sd3:29.0},
+  {m:144,sd3n:13.4,sd2n:14.5,sd1n:15.8,sd0:17.5,sd1:19.9,sd2:23.6,sd3:30.0},
+  {m:150,sd3n:13.6,sd2n:14.7,sd1n:16.1,sd0:17.9,sd1:20.4,sd2:24.2,sd3:30.9},
+  {m:156,sd3n:13.8,sd2n:14.9,sd1n:16.4,sd0:18.2,sd1:20.8,sd2:24.8,sd3:31.7},
+  {m:162,sd3n:14.0,sd2n:15.2,sd1n:16.7,sd0:18.6,sd1:21.3,sd2:25.3,sd3:32.4},
+  {m:168,sd3n:14.3,sd2n:15.5,sd1n:17.0,sd0:19.0,sd1:21.8,sd2:25.9,sd3:33.1},
+  {m:174,sd3n:14.5,sd2n:15.7,sd1n:17.3,sd0:19.4,sd1:22.2,sd2:26.5,sd3:33.6},
+  {m:180,sd3n:14.7,sd2n:16.0,sd1n:17.6,sd0:19.8,sd1:22.7,sd2:27.0,sd3:34.1},
+  {m:186,sd3n:14.9,sd2n:16.3,sd1n:18.0,sd0:20.1,sd1:23.1,sd2:27.4,sd3:34.5},
+  {m:192,sd3n:15.1,sd2n:16.5,sd1n:18.2,sd0:20.5,sd1:23.5,sd2:27.9,sd3:34.8},
+  {m:198,sd3n:15.3,sd2n:16.7,sd1n:18.5,sd0:20.8,sd1:23.9,sd2:28.3,sd3:35.0},
+  {m:204,sd3n:15.4,sd2n:16.9,sd1n:18.8,sd0:21.1,sd1:24.3,sd2:28.6,sd3:35.2},
+  {m:210,sd3n:15.6,sd2n:17.1,sd1n:19.0,sd0:21.4,sd1:24.6,sd2:29.0,sd3:35.3},
+  {m:216,sd3n:15.7,sd2n:17.3,sd1n:19.2,sd0:21.7,sd1:24.9,sd2:29.2,sd3:35.4},
+  {m:222,sd3n:15.8,sd2n:17.4,sd1n:19.4,sd0:22.0,sd1:25.2,sd2:29.5,sd3:35.5},
+  {m:228,sd3n:15.9,sd2n:17.6,sd1n:19.6,sd0:22.2,sd1:25.4,sd2:29.7,sd3:35.5}
+];
+
+// BMI-FOR-AGE 5-19 GIRLS (WHO 2007)
+const WHO2007_BMI_GIRLS = [
+  {m:61,sd3n:11.8,sd2n:12.7,sd1n:13.9,sd0:15.2,sd1:16.9,sd2:18.9,sd3:21.3},
+  {m:63,sd3n:11.8,sd2n:12.7,sd1n:13.9,sd0:15.2,sd1:16.9,sd2:18.9,sd3:21.5},
+  {m:66,sd3n:11.7,sd2n:12.7,sd1n:13.9,sd0:15.2,sd1:16.9,sd2:19.0,sd3:21.7},
+  {m:69,sd3n:11.7,sd2n:12.7,sd1n:13.9,sd0:15.3,sd1:17.0,sd2:19.1,sd3:21.9},
+  {m:72,sd3n:11.7,sd2n:12.7,sd1n:13.9,sd0:15.3,sd1:17.0,sd2:19.2,sd3:22.1},
+  {m:78,sd3n:11.7,sd2n:12.7,sd1n:13.9,sd0:15.3,sd1:17.1,sd2:19.5,sd3:22.7},
+  {m:84,sd3n:11.8,sd2n:12.7,sd1n:13.9,sd0:15.4,sd1:17.3,sd2:19.8,sd3:23.3},
+  {m:90,sd3n:11.8,sd2n:12.8,sd1n:14.0,sd0:15.5,sd1:17.5,sd2:20.1,sd3:24.0},
+  {m:96,sd3n:11.9,sd2n:12.9,sd1n:14.1,sd0:15.7,sd1:17.7,sd2:20.6,sd3:24.8},
+  {m:102,sd3n:12.0,sd2n:13.0,sd1n:14.3,sd0:15.9,sd1:18.0,sd2:21.0,sd3:25.6},
+  {m:108,sd3n:12.1,sd2n:13.1,sd1n:14.4,sd0:16.1,sd1:18.3,sd2:21.5,sd3:26.5},
+  {m:114,sd3n:12.2,sd2n:13.3,sd1n:14.6,sd0:16.3,sd1:18.7,sd2:22.0,sd3:27.5},
+  {m:120,sd3n:12.4,sd2n:13.5,sd1n:14.8,sd0:16.6,sd1:19.0,sd2:22.6,sd3:28.4},
+  {m:126,sd3n:12.5,sd2n:13.7,sd1n:15.1,sd0:16.9,sd1:19.4,sd2:23.1,sd3:29.3},
+  {m:132,sd3n:12.7,sd2n:13.9,sd1n:15.3,sd0:17.2,sd1:19.9,sd2:23.7,sd3:30.2},
+  {m:138,sd3n:12.9,sd2n:14.1,sd1n:15.6,sd0:17.6,sd1:20.3,sd2:24.3,sd3:31.1},
+  {m:144,sd3n:13.2,sd2n:14.4,sd1n:16.0,sd0:18.0,sd1:20.8,sd2:25.0,sd3:31.9},
+  {m:150,sd3n:13.4,sd2n:14.7,sd1n:16.3,sd0:18.4,sd1:21.3,sd2:25.6,sd3:32.7},
+  {m:156,sd3n:13.6,sd2n:14.9,sd1n:16.6,sd0:18.8,sd1:21.8,sd2:26.2,sd3:33.4},
+  {m:162,sd3n:13.8,sd2n:15.2,sd1n:16.9,sd0:19.2,sd1:22.3,sd2:26.8,sd3:34.1},
+  {m:168,sd3n:14.0,sd2n:15.4,sd1n:17.2,sd0:19.6,sd1:22.7,sd2:27.3,sd3:34.7},
+  {m:174,sd3n:14.2,sd2n:15.7,sd1n:17.5,sd0:19.9,sd1:23.1,sd2:27.8,sd3:35.1},
+  {m:180,sd3n:14.4,sd2n:15.9,sd1n:17.8,sd0:20.2,sd1:23.5,sd2:28.2,sd3:35.5},
+  {m:186,sd3n:14.5,sd2n:16.0,sd1n:18.0,sd0:20.5,sd1:23.8,sd2:28.6,sd3:35.8},
+  {m:192,sd3n:14.6,sd2n:16.2,sd1n:18.2,sd0:20.7,sd1:24.1,sd2:28.9,sd3:36.1},
+  {m:198,sd3n:14.7,sd2n:16.3,sd1n:18.3,sd0:20.9,sd1:24.3,sd2:29.1,sd3:36.2},
+  {m:204,sd3n:14.7,sd2n:16.4,sd1n:18.4,sd0:21.0,sd1:24.5,sd2:29.3,sd3:36.3},
+  {m:210,sd3n:14.7,sd2n:16.4,sd1n:18.5,sd0:21.2,sd1:24.6,sd2:29.4,sd3:36.3},
+  {m:216,sd3n:14.7,sd2n:16.4,sd1n:18.6,sd0:21.3,sd1:24.8,sd2:29.5,sd3:36.3},
+  {m:222,sd3n:14.7,sd2n:16.5,sd1n:18.6,sd0:21.3,sd1:24.9,sd2:29.6,sd3:36.2},
+  {m:228,sd3n:14.7,sd2n:16.5,sd1n:18.7,sd0:21.4,sd1:25.0,sd2:29.7,sd3:36.2}
+];
+
+// HEIGHT-FOR-AGE 5-19 BOYS (WHO 2007)
+const WHO2007_HFA_BOYS = [
+  {m:61,sd3n:87.3,sd2n:91.9,sd1n:96.5,sd0:101.1,sd1:105.7,sd2:110.3,sd3:114.9},
+  {m:66,sd3n:89.2,sd2n:93.9,sd1n:98.7,sd0:103.4,sd1:108.2,sd2:112.9,sd3:117.7},
+  {m:72,sd3n:91.3,sd2n:96.2,sd1n:101.2,sd0:106.1,sd1:111.0,sd2:116.0,sd3:120.9},
+  {m:78,sd3n:93.3,sd2n:98.4,sd1n:103.6,sd0:108.7,sd1:113.8,sd2:118.9,sd3:124.0},
+  {m:84,sd3n:95.3,sd2n:100.6,sd1n:105.9,sd0:111.2,sd1:116.4,sd2:121.7,sd3:127.0},
+  {m:90,sd3n:97.2,sd2n:102.7,sd1n:108.1,sd0:113.6,sd1:119.1,sd2:124.5,sd3:130.0},
+  {m:96,sd3n:99.0,sd2n:104.7,sd1n:110.3,sd0:116.0,sd1:121.6,sd2:127.3,sd3:132.9},
+  {m:102,sd3n:100.8,sd2n:106.6,sd1n:112.4,sd0:118.3,sd1:124.1,sd2:129.9,sd3:135.8},
+  {m:108,sd3n:102.5,sd2n:108.5,sd1n:114.5,sd0:120.5,sd1:126.6,sd2:132.6,sd3:138.6},
+  {m:114,sd3n:104.2,sd2n:110.4,sd1n:116.6,sd0:122.8,sd1:129.0,sd2:135.2,sd3:141.4},
+  {m:120,sd3n:105.9,sd2n:112.3,sd1n:118.7,sd0:125.0,sd1:131.4,sd2:137.8,sd3:144.2},
+  {m:126,sd3n:107.6,sd2n:114.2,sd1n:120.7,sd0:127.3,sd1:133.8,sd2:140.4,sd3:146.9},
+  {m:132,sd3n:109.5,sd2n:116.2,sd1n:122.9,sd0:129.7,sd1:136.4,sd2:143.1,sd3:149.8},
+  {m:138,sd3n:111.4,sd2n:118.4,sd1n:125.3,sd0:132.2,sd1:139.1,sd2:146.0,sd3:152.9},
+  {m:144,sd3n:113.7,sd2n:120.7,sd1n:127.8,sd0:134.9,sd1:142.0,sd2:149.1,sd3:156.2},
+  {m:150,sd3n:116.1,sd2n:123.4,sd1n:130.7,sd0:137.9,sd1:145.2,sd2:152.4,sd3:159.7},
+  {m:156,sd3n:118.9,sd2n:126.3,sd1n:133.8,sd0:141.2,sd1:148.6,sd2:156.0,sd3:163.5},
+  {m:162,sd3n:121.8,sd2n:129.4,sd1n:137.0,sd0:144.5,sd1:152.1,sd2:159.7,sd3:167.3},
+  {m:168,sd3n:124.7,sd2n:132.4,sd1n:140.1,sd0:147.8,sd1:155.5,sd2:163.2,sd3:170.9},
+  {m:174,sd3n:127.5,sd2n:135.2,sd1n:143.0,sd0:150.8,sd1:158.5,sd2:166.3,sd3:174.1},
+  {m:180,sd3n:129.9,sd2n:137.7,sd1n:145.5,sd0:153.3,sd1:161.2,sd2:169.0,sd3:176.8},
+  {m:186,sd3n:132.1,sd2n:139.9,sd1n:147.7,sd0:155.5,sd1:163.3,sd2:171.1,sd3:178.9},
+  {m:192,sd3n:134.0,sd2n:141.8,sd1n:149.6,sd0:157.4,sd1:165.1,sd2:172.9,sd3:180.7},
+  {m:198,sd3n:135.6,sd2n:143.4,sd1n:151.1,sd0:158.8,sd1:166.5,sd2:174.2,sd3:181.9},
+  {m:204,sd3n:136.9,sd2n:144.6,sd1n:152.2,sd0:159.9,sd1:167.5,sd2:175.2,sd3:182.8},
+  {m:210,sd3n:138.0,sd2n:145.5,sd1n:153.1,sd0:160.6,sd1:168.2,sd2:175.8,sd3:183.3},
+  {m:216,sd3n:138.8,sd2n:146.3,sd1n:153.7,sd0:161.2,sd1:168.7,sd2:176.1,sd3:183.6},
+  {m:222,sd3n:139.5,sd2n:146.9,sd1n:154.2,sd0:161.6,sd1:169.0,sd2:176.4,sd3:183.8},
+  {m:228,sd3n:140.1,sd2n:147.3,sd1n:154.6,sd0:161.9,sd1:169.2,sd2:176.5,sd3:183.8}
+];
+
+// HEIGHT-FOR-AGE 5-19 GIRLS (WHO 2007)
+const WHO2007_HFA_GIRLS = [
+  {m:61,sd3n:85.7,sd2n:90.5,sd1n:95.3,sd0:100.1,sd1:104.8,sd2:109.6,sd3:114.4},
+  {m:66,sd3n:87.5,sd2n:92.4,sd1n:97.4,sd0:102.3,sd1:107.2,sd2:112.2,sd3:117.1},
+  {m:72,sd3n:89.5,sd2n:94.6,sd1n:99.8,sd0:104.9,sd1:110.0,sd2:115.1,sd3:120.2},
+  {m:78,sd3n:91.5,sd2n:96.8,sd1n:102.1,sd0:107.4,sd1:112.7,sd2:118.0,sd3:123.3},
+  {m:84,sd3n:93.5,sd2n:98.9,sd1n:104.4,sd0:109.9,sd1:115.3,sd2:120.8,sd3:126.3},
+  {m:90,sd3n:95.5,sd2n:101.1,sd1n:106.8,sd0:112.4,sd1:118.0,sd2:123.7,sd3:129.3},
+  {m:96,sd3n:97.6,sd2n:103.4,sd1n:109.2,sd0:115.0,sd1:120.8,sd2:126.6,sd3:132.4},
+  {m:102,sd3n:99.7,sd2n:105.7,sd1n:111.6,sd0:117.6,sd1:123.5,sd2:129.5,sd3:135.5},
+  {m:108,sd3n:101.9,sd2n:108.1,sd1n:114.2,sd0:120.3,sd1:126.4,sd2:132.5,sd3:138.6},
+  {m:114,sd3n:104.3,sd2n:110.5,sd1n:116.8,sd0:123.0,sd1:129.3,sd2:135.5,sd3:141.8},
+  {m:120,sd3n:106.7,sd2n:113.0,sd1n:119.4,sd0:125.8,sd1:132.2,sd2:138.6,sd3:145.0},
+  {m:126,sd3n:109.2,sd2n:115.7,sd1n:122.2,sd0:128.7,sd1:135.3,sd2:141.8,sd3:148.3},
+  {m:132,sd3n:111.8,sd2n:118.4,sd1n:125.1,sd0:131.7,sd1:138.3,sd2:145.0,sd3:151.6},
+  {m:138,sd3n:114.4,sd2n:121.2,sd1n:127.9,sd0:134.7,sd1:141.4,sd2:148.2,sd3:154.9},
+  {m:144,sd3n:117.0,sd2n:123.9,sd1n:130.7,sd0:137.6,sd1:144.4,sd2:151.2,sd3:158.1},
+  {m:150,sd3n:119.5,sd2n:126.4,sd1n:133.3,sd0:140.2,sd1:147.1,sd2:154.0,sd3:160.9},
+  {m:156,sd3n:121.7,sd2n:128.6,sd1n:135.6,sd0:142.5,sd1:149.4,sd2:156.4,sd3:163.3},
+  {m:162,sd3n:123.5,sd2n:130.5,sd1n:137.4,sd0:144.4,sd1:151.3,sd2:158.3,sd3:165.3},
+  {m:168,sd3n:125.1,sd2n:132.0,sd1n:139.0,sd0:145.9,sd1:152.8,sd2:159.8,sd3:166.7},
+  {m:174,sd3n:126.3,sd2n:133.2,sd1n:140.1,sd0:147.1,sd1:154.0,sd2:160.9,sd3:167.8},
+  {m:180,sd3n:127.3,sd2n:134.2,sd1n:141.0,sd0:147.9,sd1:154.8,sd2:161.7,sd3:168.5},
+  {m:186,sd3n:128.0,sd2n:134.8,sd1n:141.7,sd0:148.5,sd1:155.4,sd2:162.2,sd3:169.0},
+  {m:192,sd3n:128.6,sd2n:135.4,sd1n:142.2,sd0:148.9,sd1:155.7,sd2:162.5,sd3:169.3},
+  {m:198,sd3n:129.0,sd2n:135.8,sd1n:142.5,sd0:149.2,sd1:156.0,sd2:162.7,sd3:169.5},
+  {m:204,sd3n:129.4,sd2n:136.1,sd1n:142.8,sd0:149.5,sd1:156.2,sd2:162.9,sd3:169.5},
+  {m:210,sd3n:129.7,sd2n:136.4,sd1n:143.0,sd0:149.7,sd1:156.3,sd2:163.0,sd3:169.6},
+  {m:216,sd3n:130.0,sd2n:136.6,sd1n:143.2,sd0:149.8,sd1:156.5,sd2:163.1,sd3:169.7},
+  {m:222,sd3n:130.3,sd2n:136.8,sd1n:143.4,sd0:150.0,sd1:156.6,sd2:163.1,sd3:169.7},
+  {m:228,sd3n:130.4,sd2n:137.0,sd1n:143.5,sd0:150.1,sd1:156.6,sd2:163.2,sd3:169.7}
+];
+
+// Interpolación para tablas WHO 2007 (Z-scores)
+function interpolateWHO2007(table, monthAge){
+  if(!table || !table.length) return null;
+  if(monthAge < table[0].m || monthAge > table[table.length-1].m) return null;
+  let lower = table[0], upper = table[0];
+  for(let i=0;i<table.length-1;i++){
+    if(table[i].m <= monthAge && table[i+1].m >= monthAge){
+      lower = table[i]; upper = table[i+1]; break;
+    }
+  }
+  if(lower.m === upper.m) return lower;
+  const t = (monthAge - lower.m) / (upper.m - lower.m);
+  const r = {};
+  ['sd3n','sd2n','sd1n','sd0','sd1','sd2','sd3'].forEach(k=>{
+    r[k] = lower[k] + t*(upper[k]-lower[k]);
+  });
+  return r;
+}
+
+// Clasificación Z-score OMS para ≥5 años
+// [GUÍA-OFICIAL: WHO Reference 2007 — BMI-for-age uses +1SD/+2SD cutoffs]
+function growthStatusZscore(val, ref, type){
+  if(!val || !ref) return {label:'Sin dato',cls:'gi-unknown'};
+  const labels = {
+    bmi: {
+      sd3n:'Delgadez severa (<-3DE)', sd2n:'Delgadez (-3 a -2DE)',
+      sd1n:'Normal (-2 a +1DE)', normal:'Normal (-2 a +1DE)',
+      sd1:'Sobrepeso (+1 a +2DE)', sd2:'Obesidad (>+2DE)'
+    },
+    height: {
+      sd3n:'Talla baja severa (<-3DE)', sd2n:'Talla baja (-3 a -2DE)',
+      sd1n:'Normal (-2 a +2DE)', normal:'Normal (-2 a +2DE)',
+      sd1:'Talla alta (+2 a +3DE)', sd2:'Talla muy alta (>+3DE)'
+    }
+  };
+  const L = labels[type] || labels.bmi;
+  if(val < ref.sd3n) return {label:L.sd3n, cls:'gi-low'};
+  if(val < ref.sd2n) return {label:L.sd2n, cls:'gi-low'};
+  if(type==='bmi'){
+    if(val <= ref.sd1) return {label:L.normal, cls:'gi-normal'};
+    if(val <= ref.sd2) return {label:L.sd1, cls:'gi-high'};
+    return {label:L.sd2, cls:'gi-high'};
+  } else {
+    if(val <= ref.sd2) return {label:L.normal, cls:'gi-normal'};
+    if(val <= ref.sd3) return {label:L.sd1, cls:'gi-high'};
+    return {label:L.sd2, cls:'gi-high'};
+  }
+}
+
+// ===========================
 // WHO WEIGHT-FOR-HEIGHT P50 LOOKUP
 // Fuente: WHO Child Growth Standards 2006
 // Indexado por talla en cm → peso mediano (P50) en kg
@@ -1724,16 +1916,24 @@ function updateGrowth(){
   const hRef  = interpolateWHO(haTable, monthAge);
   const bmiRef = interpolateWHO(bmiTable, monthAge);
 
+  // WHO 2007 Z-score refs for ≥60 months
+  const bmi2007 = (monthAge>=61) ? interpolateWHO2007(isMale?WHO2007_BMI_BOYS:WHO2007_BMI_GIRLS, monthAge) : null;
+  const hfa2007 = (monthAge>=61) ? interpolateWHO2007(isMale?WHO2007_HFA_BOYS:WHO2007_HFA_GIRLS, monthAge) : null;
+
   // Waterlow: P/T% and T/E%
   const medWforH = (peso && talla) ? getMedianWeightForHeight(talla, isMale) : null;
-  const medHforA = getMedianHeightForAge(monthAge, isMale);
+  const medHforA = hfa2007 ? hfa2007.sd0 : getMedianHeightForAge(monthAge, isMale);
   const ptPct = (peso && medWforH) ? parseFloat((peso/medWforH*100).toFixed(1)) : null;
   const tePct = (talla && medHforA) ? parseFloat((talla/medHforA*100).toFixed(1)) : null;
   const wl = waterlowClassify(ptPct, tePct);
 
+  // Stats para <60 meses (percentiles OMS 2006)
   const wStat = (peso&&wRef) ? growthStatus(peso,wRef.p3,wRef.p15,wRef.p85,wRef.p97,'weight') : {label:'Sin dato',cls:'gi-unknown'};
   const hStat = (talla&&hRef) ? growthStatus(talla,hRef.p3,hRef.p15,hRef.p85,hRef.p97,'height') : {label:'Sin dato',cls:'gi-unknown'};
   const bmiStat = (imc&&bmiRef) ? growthStatus(imc,bmiRef.p3,bmiRef.p15,bmiRef.p85,bmiRef.p97,'bmi') : {label:'Sin dato',cls:'gi-unknown'};
+  // Stats para ≥60 meses (Z-scores OMS 2007)
+  const bmiStat2007 = (imc&&bmi2007) ? growthStatusZscore(imc, bmi2007, 'bmi') : {label:'Sin dato',cls:'gi-unknown'};
+  const hStat2007 = (talla&&hfa2007) ? growthStatusZscore(talla, hfa2007, 'height') : {label:'Sin dato',cls:'gi-unknown'};
 
   let html = '';
 
@@ -1825,53 +2025,54 @@ function updateGrowth(){
     </div>`;
   }
 
-  // ── MODO ≥ 60 meses ──
+  // ── MODO ≥ 60 meses — WHO Reference 2007 (Z-scores) ──
   else{
-    // Alerta si IMC bajo
-    const warnBmi = (bmiStat.cls==='gi-low')
-      ? `<div class="alert alert-warning" style="margin-top:10px">⚠️ IMC/Edad por debajo de rangos normales. Evaluar estado nutricional.</div>` : '';
-    // Nota contextual: P/E o T/E bajos PERO IMC normal → no es alarma real
-    // [GUÍA-OFICIAL: WHO Technical Report 2006 — P/E no discrimina entre niño bajo-delgado y bajo-robusto;
-    //  IMC/Edad es el indicador de referencia para estado nutricional ≥5 años]
-    const peOrTelow = (wStat.cls==='gi-low' || hStat.cls==='gi-low');
-    const bmiOk = (bmiStat.cls==='gi-normal');
-    const discordNote = (peOrTelow && bmiOk)
+    // Usar Z-scores WHO 2007 como fuente primaria
+    const bmiZ = bmiStat2007;
+    const hZ = hStat2007;
+    // Alerta si IMC bajo (delgadez)
+    const warnBmi = (bmiZ.cls==='gi-low')
+      ? `<div class="alert alert-warning" style="margin-top:10px">⚠️ IMC/Edad por debajo de -2DE. Evaluar estado nutricional y descartar causas orgánicas.</div>` : '';
+    // Nota contextual: T/E baja PERO IMC normal
+    const telow = (hZ.cls==='gi-low');
+    const bmiOk = (bmiZ.cls==='gi-normal');
+    const discordNote = (telow && bmiOk)
       ? `<div class="alert alert-info" style="margin-top:10px">
-          <strong>Nota clínica:</strong> Peso/Edad y/o Talla/Edad fuera de rango, pero <strong>IMC/Edad es normal</strong>.
+          <strong>Nota clínica:</strong> Talla/Edad fuera de rango, pero <strong>IMC/Edad es normal</strong>.
           En ≥5 años el IMC/Edad es el indicador principal de estado nutricional (OMS 2007).
-          P/E aislado no diferencia entre un niño constitutivamente delgado y uno desnutrido.
-          <em>[CONSENSO: Interpretar P/E y T/E en conjunto con IMC/Edad]</em>
+          Talla baja aislada puede ser constitucional — correlacionar con talla parental y velocidad de crecimiento.
+          <em>[CONSENSO: Interpretar T/E en conjunto con IMC/Edad y contexto clínico]</em>
          </div>` : '';
     // P/E solo tiene referencia OMS hasta 120 meses (10 años)
     const peOverAge = (monthAge > 120);
-    const peNote = peOverAge ? '<div style="font-size:10px;color:#c05621;margin-top:3px">[Sin referencia OMS >10 años]</div>' : '';
+    const peNote = peOverAge ? '<div style="font-size:10px;color:#c05621;margin-top:3px">[P/E no disponible >10 años — OMS 2007]</div>' : '';
     html = `
     <div class="evidence-badge">
       <span class="ev-icon">📋</span>
-      <div><strong>[GUÍA-OFICIAL]</strong> ≥5 años: <strong>IMC/Edad OMS 2007</strong> es el indicador estándar para estado nutricional.
-      P/E y T/E son complementarios, no definitivos por sí solos.
-      <em>Fuente: WHO Reference 2007; AAP CPG Obesity 2023 (Pediatrics 151:e2022060640)</em></div>
+      <div><strong>[GUÍA-OFICIAL]</strong> ≥5 años: Clasificación con <strong>Z-scores OMS 2007</strong> (datos oficiales descargados de who.int).
+      IMC/Edad: Normal = -2DE a +1DE | Sobrepeso = +1DE a +2DE | Obesidad = >+2DE.
+      <em>Fuente: WHO Reference 2007 (bmi-for-age, height-for-age xlsx); AAP CPG Obesity 2023 (Pediatrics 151:e2022060640)</em></div>
     </div>
     <div class="growth-card">
-      <div class="growth-indicator ${bmiStat.cls}" style="border:2px solid ${bmiStat.cls==='gi-normal'?'#9ae6b4':bmiStat.cls==='gi-low'?'#fc8181':'#fbd38d'}">
+      <div class="growth-indicator ${bmiZ.cls}" style="border:2px solid ${bmiZ.cls==='gi-normal'?'#9ae6b4':bmiZ.cls==='gi-low'?'#fc8181':'#fbd38d'}">
         <div class="gi-label" style="color:#1a56a0;font-size:12px">IMC/Edad (OMS 2007)</div>
-        <div style="font-size:9px;font-weight:700;color:#1a56a0;margin-bottom:2px">INDICADOR PRINCIPAL</div>
+        <div style="font-size:9px;font-weight:700;color:#1a56a0;margin-bottom:2px">INDICADOR PRINCIPAL — Z-SCORES</div>
         <div class="gi-value">${imc?imc+' kg/m²':'—'}</div>
-        <div class="gi-status">${bmiStat.label}</div>
-        ${bmiRef?`<div style="font-size:10px;color:#718096;margin-top:4px">P50: ${bmiRef.p50.toFixed(1)} kg/m²</div>`:''}
+        <div class="gi-status">${bmiZ.label}</div>
+        ${bmi2007?`<div style="font-size:10px;color:#718096;margin-top:4px">Mediana: ${bmi2007.sd0.toFixed(1)} kg/m² | -2DE: ${bmi2007.sd2n.toFixed(1)} | +1DE: ${bmi2007.sd1.toFixed(1)} | +2DE: ${bmi2007.sd2.toFixed(1)}</div>`:''}
       </div>
-      <div class="growth-indicator ${peOverAge?'gi-unknown':wStat.cls}" style="opacity:${peOverAge?'0.6':'0.85'}">
+      <div class="growth-indicator ${hZ.cls}" style="opacity:0.85">
+        <div class="gi-label">Talla/Edad (OMS 2007)</div>
+        <div class="gi-value">${talla?talla+' cm':'—'}</div>
+        <div class="gi-status" style="font-size:11px">${hZ.label}</div>
+        ${hfa2007?`<div style="font-size:10px;color:#718096;margin-top:4px">Mediana: ${hfa2007.sd0.toFixed(1)} cm | -2DE: ${hfa2007.sd2n.toFixed(1)} | +2DE: ${hfa2007.sd2.toFixed(1)}</div>`:''}
+      </div>
+      <div class="growth-indicator ${peOverAge?'gi-unknown':wStat.cls}" style="opacity:${peOverAge?'0.5':'0.7'}">
         <div class="gi-label">Peso/Edad</div>
         <div class="gi-value">${peso?peso+' kg':'—'}</div>
-        <div class="gi-status" style="font-size:11px">${peOverAge?'Fuera de rango OMS':wStat.label}</div>
+        <div class="gi-status" style="font-size:11px">${peOverAge?'No disponible >10 años':wStat.label}</div>
         ${(!peOverAge&&wRef)?`<div style="font-size:10px;color:#718096;margin-top:4px">P50: ${wRef.p50.toFixed(1)} kg</div>`:''}
         ${peNote}
-      </div>
-      <div class="growth-indicator ${hStat.cls}" style="opacity:0.85">
-        <div class="gi-label">Talla/Edad</div>
-        <div class="gi-value">${talla?talla+' cm':'—'}</div>
-        <div class="gi-status" style="font-size:11px">${hStat.label}</div>
-        ${hRef?`<div style="font-size:10px;color:#718096;margin-top:4px">P50: ${hRef.p50.toFixed(1)} cm</div>`:''}
       </div>
     </div>${discordNote}${warnBmi}`;
   }
@@ -1911,7 +2112,9 @@ function renderGrowthCharts(currentMonth, isMale, peso, talla, imc, ptPct, tePct
   const waTable = isMale ? WHO_WA_BOYS : WHO_WA_GIRLS;
   const haTable = isMale ? WHO_HA_BOYS : WHO_HA_GIRLS;
   const bmiTable = isMale ? WHO_BMI_BOYS : WHO_BMI_GIRLS;
-  const maxMonth = Math.min(Math.max(currentMonth+6, 24), 120);
+  const maxMonth = currentMonth >= 60
+    ? Math.min(Math.max(currentMonth+12, 72), 228)
+    : Math.min(Math.max(currentMonth+6, 24), 120);
 
   // Helper: build sparse history dataset aligned to filtered WHO x-axis
   function buildHistorySeries(filtered, history, valueKey){
@@ -1960,16 +2163,17 @@ function renderGrowthCharts(currentMonth, isMale, peso, talla, imc, ptPct, tePct
       <button class="chart-tab" onclick="switchChartTab('wh',this)">Peso/Talla</button>`;
   } else {
     tabsHtml = `
-      <button class="chart-tab active" onclick="switchChartTab('weight',this)">Peso/Edad</button>
-      <button class="chart-tab" onclick="switchChartTab('height',this)">Talla/Edad</button>
-      <button class="chart-tab" onclick="switchChartTab('bmi',this)">IMC/Edad</button>`;
+      <button class="chart-tab active" onclick="switchChartTab('bmi',this)">IMC/Edad (OMS 2007)</button>
+      <button class="chart-tab" onclick="switchChartTab('height',this)">Talla/Edad (OMS 2007)</button>
+      ${currentMonth<=120?'<button class="chart-tab" onclick="switchChartTab(\'weight\',this)">Peso/Edad</button>':''}`;
   }
   if(tabsRow) tabsRow.innerHTML = tabsHtml;
 
-  // Show only the weight chart initially, hide others
+  // Show default chart: IMC for ≥60m, weight for <60m
+  const defaultChart = currentMonth >= 60 ? 'bmi' : 'weight';
   ['weight','height','bmi','wh'].forEach(t=>{
     const el = document.getElementById('chart-'+t);
-    if(el) el.style.display = t==='weight' ? 'block' : 'none';
+    if(el) el.style.display = t===defaultChart ? 'block' : 'none';
   });
 
   function makeChart(canvasId, labels, datasets){
@@ -2015,40 +2219,83 @@ function renderGrowthCharts(currentMonth, isMale, peso, talla, imc, ptPct, tePct
 
   // === TALLA/EDAD chart ===
   {
-    const filtered = haTable.filter(d=>d.m<=maxMonth);
-    const lbl = filtered.map(d=>d.m<24?d.m+'m':(d.m/12).toFixed(1)+'a');
-    const pidx = filtered.reduce((b,d,i)=>Math.abs(d.m-currentMonth)<Math.abs(filtered[b].m-currentMonth)?i:b,0);
-    const dot = filtered.map((_,i)=>i===pidx&&talla?talla:null);
-    const histSeries = buildHistorySeries(filtered, patientHistory, 'talla');
-    const datasets = [
-      {label:'P3',data:filtered.map(d=>d.p3),borderColor:'#bee3f8',borderWidth:1.5,fill:false,pointRadius:0,tension:0.4,borderDash:[4,4]},
-      {label:'P15',data:filtered.map(d=>d.p15),borderColor:'#4299e1',borderWidth:1.5,fill:false,pointRadius:0,tension:0.4},
-      {label:'P50 (cm)',data:filtered.map(d=>d.p50),borderColor:'#1a56a0',borderWidth:2.5,fill:false,pointRadius:0,tension:0.4},
-      {label:'P85',data:filtered.map(d=>d.p85),borderColor:'#4299e1',borderWidth:1.5,fill:false,pointRadius:0,tension:0.4},
-      {label:'P97',data:filtered.map(d=>d.p97),borderColor:'#bee3f8',borderWidth:1.5,fill:false,pointRadius:0,tension:0.4,borderDash:[4,4]},
-    ];
-    if(histSeries) datasets.push(histSeries);
-    datasets.push({label:'Control actual',data:dot,borderColor:'#e53e3e',backgroundColor:'#e53e3e',borderWidth:2,pointRadius:dot.map(v=>v?9:0),pointHoverRadius:11,showLine:false});
-    makeChart('canvas-height', lbl, datasets);
+    // Para ≥60m usar WHO 2007, para <60m usar WHO 2006
+    const useWHO2007h = (currentMonth >= 60);
+    const hfa2007t = isMale ? WHO2007_HFA_BOYS : WHO2007_HFA_GIRLS;
+    if(useWHO2007h){
+      const filtered = hfa2007t.filter(d=>d.m<=maxMonth);
+      const lbl = filtered.map(d=>(d.m/12).toFixed(1)+'a');
+      const pidx = filtered.reduce((b,d,i)=>Math.abs(d.m-currentMonth)<Math.abs(filtered[b].m-currentMonth)?i:b,0);
+      const dot = filtered.map((_,i)=>i===pidx&&talla?talla:null);
+      const histSeries = buildHistorySeries(filtered, patientHistory, 'talla');
+      const datasets = [
+        {label:'-3DE',data:filtered.map(d=>d.sd3n),borderColor:'#fed7d7',borderWidth:1,fill:false,pointRadius:0,tension:0.4,borderDash:[4,4]},
+        {label:'-2DE',data:filtered.map(d=>d.sd2n),borderColor:'#fc8181',borderWidth:1.5,fill:false,pointRadius:0,tension:0.4,borderDash:[3,3]},
+        {label:'-1DE',data:filtered.map(d=>d.sd1n),borderColor:'#4299e1',borderWidth:1.5,fill:false,pointRadius:0,tension:0.4},
+        {label:'Mediana (cm)',data:filtered.map(d=>d.sd0),borderColor:'#1a56a0',borderWidth:2.5,fill:false,pointRadius:0,tension:0.4},
+        {label:'+1DE',data:filtered.map(d=>d.sd1),borderColor:'#4299e1',borderWidth:1.5,fill:false,pointRadius:0,tension:0.4},
+        {label:'+2DE',data:filtered.map(d=>d.sd2),borderColor:'#fc8181',borderWidth:1.5,fill:false,pointRadius:0,tension:0.4,borderDash:[3,3]},
+      ];
+      if(histSeries) datasets.push(histSeries);
+      datasets.push({label:'Control actual',data:dot,borderColor:'#e53e3e',backgroundColor:'#e53e3e',borderWidth:2,pointRadius:dot.map(v=>v?9:0),pointHoverRadius:11,showLine:false});
+      makeChart('canvas-height', lbl, datasets);
+    } else {
+      const filtered = haTable.filter(d=>d.m<=maxMonth);
+      const lbl = filtered.map(d=>d.m<24?d.m+'m':(d.m/12).toFixed(1)+'a');
+      const pidx = filtered.reduce((b,d,i)=>Math.abs(d.m-currentMonth)<Math.abs(filtered[b].m-currentMonth)?i:b,0);
+      const dot = filtered.map((_,i)=>i===pidx&&talla?talla:null);
+      const histSeries = buildHistorySeries(filtered, patientHistory, 'talla');
+      const datasets = [
+        {label:'P3',data:filtered.map(d=>d.p3),borderColor:'#bee3f8',borderWidth:1.5,fill:false,pointRadius:0,tension:0.4,borderDash:[4,4]},
+        {label:'P15',data:filtered.map(d=>d.p15),borderColor:'#4299e1',borderWidth:1.5,fill:false,pointRadius:0,tension:0.4},
+        {label:'P50 (cm)',data:filtered.map(d=>d.p50),borderColor:'#1a56a0',borderWidth:2.5,fill:false,pointRadius:0,tension:0.4},
+        {label:'P85',data:filtered.map(d=>d.p85),borderColor:'#4299e1',borderWidth:1.5,fill:false,pointRadius:0,tension:0.4},
+        {label:'P97',data:filtered.map(d=>d.p97),borderColor:'#bee3f8',borderWidth:1.5,fill:false,pointRadius:0,tension:0.4,borderDash:[4,4]},
+      ];
+      if(histSeries) datasets.push(histSeries);
+      datasets.push({label:'Control actual',data:dot,borderColor:'#e53e3e',backgroundColor:'#e53e3e',borderWidth:2,pointRadius:dot.map(v=>v?9:0),pointHoverRadius:11,showLine:false});
+      makeChart('canvas-height', lbl, datasets);
+    }
   }
 
-  // === IMC/EDAD chart (≥ 24m only) ===
+  // === IMC/EDAD chart (≥ 24m) ===
   if(currentMonth >= 24){
-    const filtered = bmiTable.filter(d=>d.m<=maxMonth&&d.m>=24);
-    const lbl = filtered.map(d=>(d.m/12).toFixed(1)+'a');
-    const pidx = filtered.reduce((b,d,i)=>Math.abs(d.m-currentMonth)<Math.abs(filtered[b].m-currentMonth)?i:b,0);
-    const dot = filtered.map((_,i)=>i===pidx&&imc?imc:null);
-    const histSeries = buildHistorySeries(filtered, patientHistory.filter(h=>h.monthAge>=24), 'imc');
-    const datasets = [
-      {label:'P3',data:filtered.map(d=>d.p3),borderColor:'#bee3f8',borderWidth:1.5,fill:false,pointRadius:0,tension:0.4,borderDash:[4,4]},
-      {label:'P15',data:filtered.map(d=>d.p15),borderColor:'#4299e1',borderWidth:1.5,fill:false,pointRadius:0,tension:0.4},
-      {label:'P50 (kg/m²)',data:filtered.map(d=>d.p50),borderColor:'#1a56a0',borderWidth:2.5,fill:false,pointRadius:0,tension:0.4},
-      {label:'P85',data:filtered.map(d=>d.p85),borderColor:'#4299e1',borderWidth:1.5,fill:false,pointRadius:0,tension:0.4},
-      {label:'P97',data:filtered.map(d=>d.p97),borderColor:'#bee3f8',borderWidth:1.5,fill:false,pointRadius:0,tension:0.4,borderDash:[4,4]},
-    ];
-    if(histSeries) datasets.push(histSeries);
-    datasets.push({label:'Control actual IMC',data:dot,borderColor:'#e53e3e',backgroundColor:'#e53e3e',borderWidth:2,pointRadius:dot.map(v=>v?9:0),pointHoverRadius:11,showLine:false});
-    makeChart('canvas-bmi', lbl, datasets);
+    const useWHO2007bmi = (currentMonth >= 60);
+    const bmi2007t = isMale ? WHO2007_BMI_BOYS : WHO2007_BMI_GIRLS;
+    if(useWHO2007bmi){
+      const filtered = bmi2007t.filter(d=>d.m<=maxMonth);
+      const lbl = filtered.map(d=>(d.m/12).toFixed(1)+'a');
+      const pidx = filtered.reduce((b,d,i)=>Math.abs(d.m-currentMonth)<Math.abs(filtered[b].m-currentMonth)?i:b,0);
+      const dot = filtered.map((_,i)=>i===pidx&&imc?imc:null);
+      const histSeries = buildHistorySeries(filtered, patientHistory.filter(h=>h.monthAge>=60), 'imc');
+      const datasets = [
+        {label:'-3DE',data:filtered.map(d=>d.sd3n),borderColor:'#fed7d7',borderWidth:1,fill:false,pointRadius:0,tension:0.4,borderDash:[4,4]},
+        {label:'-2DE',data:filtered.map(d=>d.sd2n),borderColor:'#fc8181',borderWidth:1.5,fill:false,pointRadius:0,tension:0.4,borderDash:[3,3]},
+        {label:'-1DE',data:filtered.map(d=>d.sd1n),borderColor:'#4299e1',borderWidth:1.5,fill:false,pointRadius:0,tension:0.4},
+        {label:'Mediana (kg/m²)',data:filtered.map(d=>d.sd0),borderColor:'#1a56a0',borderWidth:2.5,fill:false,pointRadius:0,tension:0.4},
+        {label:'+1DE (Sobrepeso)',data:filtered.map(d=>d.sd1),borderColor:'#fbd38d',borderWidth:2,fill:false,pointRadius:0,tension:0.4},
+        {label:'+2DE (Obesidad)',data:filtered.map(d=>d.sd2),borderColor:'#fc8181',borderWidth:1.5,fill:false,pointRadius:0,tension:0.4,borderDash:[3,3]},
+      ];
+      if(histSeries) datasets.push(histSeries);
+      datasets.push({label:'Control actual IMC',data:dot,borderColor:'#e53e3e',backgroundColor:'#e53e3e',borderWidth:2,pointRadius:dot.map(v=>v?9:0),pointHoverRadius:11,showLine:false});
+      makeChart('canvas-bmi', lbl, datasets);
+    } else {
+      const filtered = bmiTable.filter(d=>d.m<=maxMonth&&d.m>=24);
+      const lbl = filtered.map(d=>(d.m/12).toFixed(1)+'a');
+      const pidx = filtered.reduce((b,d,i)=>Math.abs(d.m-currentMonth)<Math.abs(filtered[b].m-currentMonth)?i:b,0);
+      const dot = filtered.map((_,i)=>i===pidx&&imc?imc:null);
+      const histSeries = buildHistorySeries(filtered, patientHistory.filter(h=>h.monthAge>=24), 'imc');
+      const datasets = [
+        {label:'P3',data:filtered.map(d=>d.p3),borderColor:'#bee3f8',borderWidth:1.5,fill:false,pointRadius:0,tension:0.4,borderDash:[4,4]},
+        {label:'P15',data:filtered.map(d=>d.p15),borderColor:'#4299e1',borderWidth:1.5,fill:false,pointRadius:0,tension:0.4},
+        {label:'P50 (kg/m²)',data:filtered.map(d=>d.p50),borderColor:'#1a56a0',borderWidth:2.5,fill:false,pointRadius:0,tension:0.4},
+        {label:'P85',data:filtered.map(d=>d.p85),borderColor:'#4299e1',borderWidth:1.5,fill:false,pointRadius:0,tension:0.4},
+        {label:'P97',data:filtered.map(d=>d.p97),borderColor:'#bee3f8',borderWidth:1.5,fill:false,pointRadius:0,tension:0.4,borderDash:[4,4]},
+      ];
+      if(histSeries) datasets.push(histSeries);
+      datasets.push({label:'Control actual IMC',data:dot,borderColor:'#e53e3e',backgroundColor:'#e53e3e',borderWidth:2,pointRadius:dot.map(v=>v?9:0),pointHoverRadius:11,showLine:false});
+      makeChart('canvas-bmi', lbl, datasets);
+    }
   }
 
   // === PESO/TALLA chart (< 60m: by height axis) ===
