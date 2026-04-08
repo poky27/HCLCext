@@ -421,6 +421,14 @@ function loadDB(){
   if(saved){
     try{ DB = JSON.parse(saved); }catch(e){ console.error(e); }
   }
+  fixNextHC();
+}
+function fixNextHC(){
+  // Recalculate nextHC from existing patients to avoid HC collisions
+  const nums = Object.values(DB.patients)
+    .map(p => parseInt((p.hc||'').replace('HC-','')) || 0)
+    .filter(n => !isNaN(n));
+  if(nums.length) DB.nextHC = Math.max(...nums) + 1;
 }
 function saveDB(){
   localStorage.setItem('hce-ped-db', JSON.stringify(DB));
@@ -580,6 +588,7 @@ async function importFromSheets(){
         imported++;
       }
     });
+    fixNextHC();
     saveDB();
     updateSidebarCount();
     showSettingsMsg('✅ '+imported+' consulta(s) importada(s) correctamente.','#276749');
