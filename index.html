@@ -329,6 +329,9 @@ hr{border:none;border-top:1px solid #e2e8f0;margin:16px 0}
       <button class="nav-item" onclick="openSettings()">
         <span class="icon">☁️</span> Google Sheets
       </button>
+      <button class="nav-item" onclick="syncAllToSheets()">
+        <span class="icon">🔄</span> Sincronizar todo
+      </button>
     </div>
     <div class="sidebar-footer">
       <div id="patient-count-sidebar">0 pacientes registrados</div>
@@ -1485,10 +1488,135 @@ function filterPatients(q){
 let treatmentRows = [];
 let selectedCIE = [];
 let formPatientId = null; // if editing existing patient
+let editingConsultId = null; // if editing existing consult
 
 function newConsultForPatient(pid){
   formPatientId = pid;
+  editingConsultId = null;
   showView('new-consult');
+}
+
+// ===========================
+// EDIT CONSULT
+// ===========================
+function editConsult(cid){
+  const c = DB.consultations[cid];
+  if(!c){ alert('Consulta no encontrada.'); return; }
+  formPatientId = c.patientId;
+  editingConsultId = cid;
+  showView('new-consult');
+  // Fill form after render
+  setTimeout(()=>{
+    const p = DB.patients[c.patientId];
+    if(!p) return;
+    const setVal = (id, val) => { const el = document.getElementById(id); if(el) el.value = val||''; };
+    setVal('f-fecha', c.fecha);
+    setVal('f-estab', c.estab);
+    setVal('f-medico', c.medico);
+    setVal('f-peso', c.peso);
+    setVal('f-talla', c.talla);
+    setVal('f-pc', c.pc);
+    setVal('f-fc', c.fc);
+    setVal('f-fr', c.fr);
+    setVal('f-temp', c.temp);
+    setVal('f-sato2', c.sato2);
+    setVal('f-pa', c.pa);
+    setVal('f-glasgow', c.glasgow);
+    setVal('f-motivo', c.motivo);
+    setVal('f-tiempo', c.tiempo);
+    setVal('f-anamnesis', c.anamnesis);
+    setVal('f-ant-peri', c.antPeri);
+    setVal('f-ant-pat', c.antPat);
+    setVal('f-ant-dpm', c.antDpm);
+    setVal('f-ant-fam', c.antFam);
+    setVal('f-ant-alim', c.antAlim);
+    setVal('f-exfis', c.exfis);
+    setVal('f-indicaciones', c.indicaciones);
+    setVal('f-examenes', c.examenes);
+    setVal('f-resultados', c.resultados);
+    setVal('f-interconsulta', c.interconsulta);
+    setVal('f-prox-cita', c.proxCita);
+    setVal('f-obs', c.observaciones);
+    if(c.referencia){ const el=document.getElementById('f-referencia'); if(el) el.checked=true; }
+    if(c.refDetalle){ setVal('f-ref-detalle', c.refDetalle); }
+    // CIE
+    if(c.cie && c.cie.length){
+      selectedCIE = [...c.cie];
+      const cieData = document.getElementById('f-cie-data');
+      if(cieData) cieData.value = JSON.stringify(selectedCIE);
+      const cieTipo = document.getElementById('f-cie-tipo');
+      if(cieTipo && c.cieTipo) cieTipo.value = c.cieTipo;
+      const cieDisplay = document.getElementById('cie-selected-display');
+      if(cieDisplay) cieDisplay.innerHTML = selectedCIE.map(d=>`<span class="cie-tag"><strong>${d.code}</strong> ${d.desc} <button type="button" onclick="removeCIE('${d.code}')" style="border:none;background:none;color:#c53030;cursor:pointer;font-size:12px">✕</button></span>`).join('');
+    }
+    // Tratamiento
+    if(c.tratamiento && c.tratamiento.length){
+      treatmentRows = [...c.tratamiento];
+      renderTreatmentRows();
+    }
+    // Vacunas
+    if(c.vaccines){ setVal('f-vaccines', c.vaccines); }
+    // Mark form as editing
+    const saveBtn = document.querySelector('button[onclick="saveConsult(event)"]');
+    if(saveBtn){ saveBtn.textContent = '💾 Actualizar consulta'; saveBtn.style.background='#276749'; }
+    const title = document.querySelector('#content h2, #content .section-title');
+    if(title) title.textContent = '✏️ Editando consulta';
+  }, 100);
+}
+
+// ===========================
+// SYNC ALL TO SHEETS
+// ===========================
+async function syncAllToSheets(){
+  const url = getGSUrl();
+  if(!url){ alert('⚠️ Primero configurá Google Sheets en el menú Configuración.'); return; }
+  const consults = Object.values(DB.consultations);
+  if(!consults.length){ alert('No hay consultas para sincronizar.'); return; }
+  setSyncStatus('⏳ Sincronizando todo...', '#fbd38d');
+  let ok = 0, errors = 0;
+  for(const c of consults){
+    const p = DB.patients[c.patientId];
+    if(!p) continue;
+    try {
+      const row = {
+        action: 'append',
+        hc: p.hc, nombre: p.nombre, fechaNac: p.fechaNac,
+        sexo: p.sexo === 'M' ? 'Masculino' : 'Femenino',
+        tutor: p.tutor||'', telefono: p.telefono||'', direccion: p.direccion||'',
+        fecha: c.fecha, estab: c.estab||'', medico: c.medico||'',
+        motivo: c.motivo||'', tiempo: c.tiempo||'', anamnesis: c.anamnesis||'',
+        antPeri: c.antPeri||'', antPat: c.antPat||'', antDpm: c.antDpm||'',
+        antFam: c.antFam||'', antAlim: c.antAlim||'',
+        peso: c.peso||'', talla: c.talla||'', pc: c.pc||'',
+        fc: c.fc||'', fr: c.fr||'', temp: c.temp||'',
+        sato2: c.sato2||'', pa: c.pa||'', glasgow: c.glasgow||'',
+        exfis: c.exfis||'',
+        cie: c.cie ? c.cie.map(d=>d.code+' '+d.desc).join(' | ') : '',
+        cieTipo: c.cieTipo||'definitivo',
+        tratamiento: c.tratamiento ? c.tratamiento.map(t=>[t.med,t.dosis,t.frec,t.dias].join(' /// ')).join(' | ') : '',
+        indicaciones: c.indicaciones||'', examenes: c.examenes||'',
+        resultados: c.resultados||'', interconsulta: c.interconsulta||'',
+        referencia: c.referencia ? 'Sí' : 'No', refDetalle: c.refDetalle||'',
+        proxCita: c.proxCita||'', vaccines: c.vaccines||'{}',
+        observaciones: c.observaciones||'', consultId: c.id
+      };
+      const resp = await fetch(url, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(row)
+      });
+      const result = await resp.json();
+      if(result.status === 'ok') ok++; else errors++;
+    } catch(err){ errors++; }
+  }
+  if(errors === 0){
+    setSyncStatus('✅ '+ok+' consultas sincronizadas', '#9ae6b4');
+    alert('✅ Sincronización completa: '+ok+' consulta(s) enviada(s) a Google Sheets.');
+  } else {
+    setSyncStatus('⚠️ '+ok+' ok / '+errors+' errores', '#fc8181');
+    alert('⚠️ Completado con errores: '+ok+' ok, '+errors+' fallaron.');
+  }
+  setTimeout(()=>setSyncStatus('☁️ Drive conectado'), 4000);
 }
 
 function renderNewConsult(){
@@ -2533,7 +2661,7 @@ function saveConsult(e){
     DB.patients[patientId].direccion = document.getElementById('f-dir').value;
   }
 
-  const consultId = 'c-'+Date.now();
+  const consultId = editingConsultId || ('c-'+Date.now());
   const consult = {
     id: consultId,
     patientId,
@@ -2578,6 +2706,7 @@ function saveConsult(e){
   // Auto-sync to Google Sheets if configured
   syncConsultToSheets(consult, DB.patients[patientId]);
   formPatientId = null;
+  editingConsultId = null;
   vaccineState = {};
   showView('history', patientId);
 }
@@ -2649,6 +2778,7 @@ function renderConsultEntry(c, p){
       </div>
       <div class="consult-actions">
         <button class="btn btn-outline btn-sm" onclick="showFullConsult('${c.id}')">👁 Ver completo</button>
+        <button class="btn btn-outline btn-sm" onclick="editConsult('${c.id}')">✏️ Editar</button>
         <button class="btn btn-ghost btn-sm" onclick="printConsult('${c.id}')">🖨️ Imprimir</button>
         <button class="btn btn-danger btn-sm" onclick="deleteConsult('${c.id}')">🗑️ Eliminar</button>
       </div>
