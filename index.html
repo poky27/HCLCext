@@ -506,7 +506,6 @@ async function syncConsultToSheets(consult, patient){
     };
     const resp = await fetch(url, {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(row)
     });
     const result = await resp.json();
@@ -1602,7 +1601,6 @@ async function syncAllToSheets(){
       };
       const resp = await fetch(url, {
         method: 'POST',
-        headers: {'Content-Type':'application/json'},
         body: JSON.stringify(row)
       });
       const result = await resp.json();
