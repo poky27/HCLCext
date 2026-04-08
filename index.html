@@ -1560,17 +1560,48 @@ function switchChartTab(type, btn){
 // UTILITY FUNCTIONS
 // ===========================
 function today(){
-  return new Date().toISOString().split('T')[0];
+  return new Date().toISOString().split('T')[0]; // YYYY-MM-DD para uso interno
+}
+function todayDisplay(){
+  return formatDate(today()); // DD/MM/AAAA para mostrar al usuario
+}
+function isoToDisplay(iso){ // YYYY-MM-DD → DD/MM/AAAA
+  if(!iso) return '';
+  const clean = iso.split('T')[0];
+  const [y,m,d] = clean.split('-');
+  if(!y||!m||!d) return iso;
+  return `${d}/${m}/${y}`;
+}
+function displayToISO(disp){ // DD/MM/AAAA → YYYY-MM-DD
+  if(!disp) return '';
+  // Si ya viene en formato ISO (YYYY-MM-DD) devolverlo tal cual
+  if(/^\d{4}-\d{2}-\d{2}/.test(disp)) return disp.split('T')[0];
+  const parts = disp.split('/');
+  if(parts.length !== 3) return '';
+  const [d,m,y] = parts;
+  if(!d||!m||!y||y.length!==4) return '';
+  return `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
+}
+function autoFormatDate(input){
+  // Auto-insert slashes while typing: 01/05/2026
+  let v = input.value.replace(/\D/g,'');
+  if(v.length > 2) v = v.slice(0,2)+'/'+v.slice(2);
+  if(v.length > 5) v = v.slice(0,5)+'/'+v.slice(5);
+  input.value = v.slice(0,10);
 }
 function formatDate(d){
   if(!d) return '';
   const clean = d.split('T')[0]; // strip ISO time if present
+  // Si ya viene en formato DD/MM/YYYY devolver tal cual
+  if(/^\d{2}\/\d{2}\/\d{4}$/.test(clean)) return clean;
   const [y,m,day] = clean.split('-');
+  if(!y||!m||!day) return d;
   return `${day}/${m}/${y}`;
 }
 function calcAge(dob){
   if(!dob) return null;
-  const birth = new Date(dob);
+  const iso = displayToISO(dob) || dob;
+  const birth = new Date(iso.includes('-') ? iso : dob);
   const now = new Date();
   let years = now.getFullYear() - birth.getFullYear();
   let months = now.getMonth() - birth.getMonth();
@@ -1727,7 +1758,7 @@ function editConsult(cid){
     const p = DB.patients[c.patientId];
     if(!p) return;
     const setVal = (id, val) => { const el = document.getElementById(id); if(el) el.value = val||''; };
-    setVal('f-fecha', c.fecha);
+    setVal('f-fecha', isoToDisplay(c.fecha));
     setVal('f-estab', c.estab);
     setVal('f-medico', c.medico);
     setVal('f-peso', c.peso);
@@ -1752,7 +1783,7 @@ function editConsult(cid){
     setVal('f-examenes', c.examenes);
     setVal('f-resultados', c.resultados);
     setVal('f-interconsulta', c.interconsulta);
-    setVal('f-prox-cita', c.proxCita);
+    setVal('f-prox-cita', isoToDisplay(c.proxCita));
     setVal('f-obs', c.observaciones);
     if(c.referencia){ const el=document.getElementById('f-referencia'); if(el) el.checked=true; }
     if(c.refDetalle){ setVal('f-ref-detalle', c.refDetalle); }
@@ -1884,7 +1915,7 @@ function renderNewConsult(){
       </div>
       <div class="field">
         <label>Fecha</label>
-        <input type="date" id="f-fecha" value="${t}" required>
+        <input type="text" id="f-fecha" value="${isoToDisplay(t)}" required placeholder="DD/MM/AAAA" maxlength="10" oninput="autoFormatDate(this)">
       </div>
       <div class="field">
         <label>Establecimiento</label>
@@ -1907,7 +1938,7 @@ function renderNewConsult(){
       </div>
       <div class="field">
         <label class="required">Fecha de nacimiento</label>
-        <input type="date" id="f-dob" required value="${p?(p.fechaNac||'').split('T')[0]:''}" onchange="updateAge()">
+        <input type="text" id="f-dob" required value="${isoToDisplay((p?.fechaNac||'').split('T')[0])}" placeholder="DD/MM/AAAA" maxlength="10" oninput="autoFormatDate(this);updateAge()">
       </div>
       <div class="field">
         <label>Edad calculada</label>
@@ -2153,7 +2184,7 @@ function renderNewConsult(){
       </div>
       <div class="field">
         <label>Próxima cita</label>
-        <input type="date" id="f-prox-cita" min="${today()}">
+        <input type="text" id="f-prox-cita" placeholder="DD/MM/AAAA" maxlength="10" oninput="autoFormatDate(this)">
         <div class="hint">Fecha de próxima evaluación o control</div>
       </div>
     </div>
@@ -2841,9 +2872,9 @@ function toggleReferencia(){
 function saveConsult(e){
   e.preventDefault();
   const hc = document.getElementById('f-hc').value;
-  const fecha = document.getElementById('f-fecha').value;
+  const fecha = displayToISO(document.getElementById('f-fecha').value) || today();
   const nombre = document.getElementById('f-nombre').value.trim();
-  const dob = document.getElementById('f-dob').value;
+  const dob = displayToISO(document.getElementById('f-dob').value);
   const sexo = document.getElementById('f-sexo').value;
 
   if(!nombre || !dob || !sexo){
@@ -2917,7 +2948,7 @@ function saveConsult(e){
     examenes: document.getElementById('f-examenes').value,
     resultados: document.getElementById('f-resultados').value,
     interconsulta: document.getElementById('f-interconsulta').value,
-    proxCita: document.getElementById('f-prox-cita').value,
+    proxCita: displayToISO(document.getElementById('f-prox-cita').value) || document.getElementById('f-prox-cita').value,
     referencia: document.getElementById('f-referencia').checked,
     refDetalle: document.getElementById('f-ref-detalle')?.value||'',
     vaccines: document.getElementById('f-vaccines').value,
