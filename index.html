@@ -2244,13 +2244,13 @@ function updateGrowth(){
   // ── Recopilar historial de controles anteriores ──
   let patientHistory = [];
   if(formPatientId && DB.patients[formPatientId]){
-    const patDob = DB.patients[formPatientId].fechaNac || dob;
+    const patDob = (DB.patients[formPatientId].fechaNac || dob).split('T')[0];
     patientHistory = Object.values(DB.consultations)
       .filter(c => c.patientId===formPatientId && (c.peso||c.talla))
       .sort((a,b) => a.fecha.localeCompare(b.fecha))
       .map(c => {
         const birth = new Date(patDob+'T12:00:00');
-        const consult = new Date(c.fecha+'T12:00:00');
+        const consult = new Date(c.fecha.split('T')[0]+'T12:00:00');
         const ageMonths = Math.max(0, (consult-birth)/(1000*60*60*24*30.4375));
         const pw = c.peso ? parseFloat(c.peso) : null;
         const pt = c.talla ? parseFloat(c.talla) : null;
