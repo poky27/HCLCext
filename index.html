@@ -666,7 +666,15 @@ function getSheet(){
 
 function appendRow(d){
   const sheet = getSheet();
-  sheet.appendRow([
+  // Check for duplicate consultId before inserting
+  if(d.consultId){
+    const data = sheet.getDataRange().getValues();
+    const consultIdCol = 40; // column index (0-based) for ConsultID
+    for(var i=1; i<data.length; i++){
+      if(data[i][consultIdCol] === d.consultId) return; // already exists, skip
+    }
+  }
+  const newRow = [
     d.hc||'', d.nombre||'', d.fechaNac||'', d.sexo||'', d.tutor||'', d.telefono||'', d.direccion||'',
     d.fecha||'', d.estab||'', d.medico||'',
     d.motivo||'', d.tiempo||'', d.anamnesis||'',
@@ -677,7 +685,8 @@ function appendRow(d){
     d.examenes||'', d.resultados||'',
     d.interconsulta||'', d.referencia||'', d.refDetalle||'',
     d.proxCita||'', d.vaccines||'', d.observaciones||'', d.consultId||''
-  ]);
+  ];
+  sheet.appendRow(newRow);
 }
 
 function getAllRows(){
@@ -1365,7 +1374,8 @@ function today(){
 }
 function formatDate(d){
   if(!d) return '';
-  const [y,m,day] = d.split('-');
+  const clean = d.split('T')[0]; // strip ISO time if present
+  const [y,m,day] = clean.split('-');
   return `${day}/${m}/${y}`;
 }
 function calcAge(dob){
