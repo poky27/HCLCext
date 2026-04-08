@@ -549,7 +549,7 @@ async function importFromSheets(){
         patientId = 'p-imported-'+row.hc+'-'+Date.now();
         DB.patients[patientId] = {
           id: patientId, hc: row.hc, nombre: row.nombre,
-          fechaNac: row.fechaNac, sexo: row.sexo==='Masculino'?'M':'F',
+          fechaNac: (row.fechaNac||'').toString().split('T')[0], sexo: row.sexo==='Masculino'?'M':'F',
           tutor: row.tutor||'', telefono: row.telefono||'',
           direccion: row.direccion||'', createdAt: row.fecha
         };
@@ -1664,6 +1664,13 @@ function renderNewConsult(){
   treatmentRows = [{med:'',dosis:'',frec:'',dias:''}];
   selectedCIE = [];
 
+  // Load vaccine state from last consultation (persist applied vaccines)
+  if(lastConsult && lastConsult.vaccines){
+    try{ vaccineState = JSON.parse(lastConsult.vaccines); }catch(e){ vaccineState = {}; }
+  } else {
+    vaccineState = {};
+  }
+
   // Saved estab & medico
   const savedEstab = localStorage.getItem('hce-estab')||'BiosScience-Ped';
   const savedMedico = localStorage.getItem('hce-doctor')||'';
@@ -1710,7 +1717,7 @@ function renderNewConsult(){
       </div>
       <div class="field">
         <label class="required">Fecha de nacimiento</label>
-        <input type="date" id="f-dob" required value="${p?p.fechaNac:''}" onchange="updateAge()">
+        <input type="date" id="f-dob" required value="${p?(p.fechaNac||'').split('T')[0]:''}" onchange="updateAge()">
       </div>
       <div class="field">
         <label>Edad calculada</label>
