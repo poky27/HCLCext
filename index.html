@@ -1485,6 +1485,14 @@ function waterlowClassify(ptPct, tePct){
     global='Desnutrición mixta'; globalCls='gi-low';
     if(wastingSev===3||stuntingSev===3) globalAlert='⚠️ Riesgo de mortalidad elevado — desnutrición mixta severa';
   }
+  // Nota metodológica: Waterlow usa 90% como umbral, OMS z-scores usan -2DE.
+  // P/T% 80-90% equivale aproximadamente a z -1.3 a -1.8 DE (rango normal por OMS).
+  // Si el wasting es solo "leve" (wastingSev===1), advertir posible falso positivo.
+  if(wastingSev===1 && stuntingSev===0){
+    globalAlert = '⚠️ Nota metodológica: P/T% 80–90% equivale a z-score ~−1.3 a −1.8 DE (normal por OMS). '
+      + 'Waterlow es más sensible que el z-score OMS. Verificar con evaluación clínica. '
+      + '[GUÍA-OFICIAL: OMS 2009 — recomienda W/L z-score <−2 DE como umbral de malnutrición aguda]';
+  }
   return {wasting,wastingCls,stunting,stuntingCls,global,globalCls,globalAlert,ptPct,tePct};
 }
 
