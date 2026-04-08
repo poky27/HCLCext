@@ -3275,7 +3275,7 @@ function doLogin(){
     document.getElementById('login-screen').classList.add('hidden');
     errEl.style.display = 'none';
     // Store session flag (tab-level)
-    sessionStorage.setItem('hce-authed','1');
+    localStorage.setItem('hce-authed','1');
   } else {
     errEl.style.display = 'block';
     document.getElementById('login-pass').value = '';
@@ -3325,7 +3325,7 @@ function addLogoutButton(){
   btn.innerHTML='<span class="icon">🔒</span> Cerrar sesión';
   btn.onclick = () => {
     if(confirm('¿Cerrar sesión?')){
-      sessionStorage.removeItem('hce-authed');
+      localStorage.removeItem('hce-authed');
       location.reload();
     }
   };
@@ -3378,7 +3378,7 @@ function importBackup(e){
 // ===========================
 function init(){
   // Check session auth
-  if(!sessionStorage.getItem('hce-authed')){
+  if(!localStorage.getItem('hce-authed')){
     document.getElementById('login-screen').classList.remove('hidden');
     document.getElementById('login-user').focus();
     return; // Don't load app until logged in
