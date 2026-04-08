@@ -444,6 +444,10 @@ function openSettings(){
   if(url) document.getElementById('gs-url').value = url;
   const doc = localStorage.getItem('hce-doctor')||'';
   if(doc) document.getElementById('gs-doctor').value = doc;
+  const msg = url
+    ? `✅ URL configurada: ...${url.slice(-30)}`
+    : '⚠️ No hay URL configurada — los datos no se sincronizan.';
+  showSettingsMsg(msg, url ? '#276749' : '#c05621');
 }
 function closeSettings(){
   document.getElementById('settings-overlay').style.display='none';
@@ -511,14 +515,15 @@ async function syncConsultToSheets(consult, patient){
       observaciones: consult.observaciones||'',
       consultId: consult.id
     };
-    await fetch(url, {
+    const resp = await fetch(url, {
       method: 'POST',
-      mode: 'no-cors',
       body: JSON.stringify(row)
     });
-    setSyncStatus('✅ Sincronizado', '#9ae6b4');
-    setTimeout(()=>setSyncStatus('☁️ Drive conectado'), 3000);
-    if(false){
+    const result = await resp.json();
+    if(result.status === 'ok'){
+      setSyncStatus('✅ Sincronizado', '#9ae6b4');
+      setTimeout(()=>setSyncStatus('☁️ Drive conectado'), 3000);
+    } else {
       setSyncStatus('⚠️ Error sync', '#fc8181');
     }
   } catch(err){
@@ -550,10 +555,11 @@ async function importFromSheets(){
         };
       }
       // Only add consult if not already imported
-      const existingC = Object.values(DB.consultations).find(c=>c.id===row.consultId);
-      if(!existingC && row.consultId){
-        DB.consultations[row.consultId] = {
-          id: row.consultId, patientId, hc: row.hc, fecha: row.fecha,
+      const cid = row.consultId || ('c-imported-'+patientId+'-'+row.fecha+'-'+Math.random().toString(36).slice(2,7));
+      const existingC = row.consultId ? Object.values(DB.consultations).find(c=>c.id===row.consultId) : null;
+      if(!existingC){
+        DB.consultations[cid] = {
+          id: cid, patientId, hc: row.hc, fecha: row.fecha,
           estab: row.estab||'', medico: row.medico||'',
           motivo: row.motivo||'', tiempo: row.tiempo||'',
           anamnesis: row.anamnesis||'',
@@ -640,9 +646,9 @@ function doPost(e){
   try {
     const data = JSON.parse(e.postData.contents);
     if(data.action === 'append') appendRow(data);
-    return json({status:'ok'});
+    return jsonCors({status:'ok'});
   } catch(err){
-    return json({status:'error', message: err.message});
+    return jsonCors({status:'error', message: err.message});
   }
 }
 
@@ -701,6 +707,12 @@ function getAllRows(){
 }
 
 function json(obj){
+  return ContentService.createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function jsonCors(obj){
+  // CORS headers for POST responses
   return ContentService.createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
 }`;
